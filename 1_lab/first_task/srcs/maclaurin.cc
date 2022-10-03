@@ -1,4 +1,4 @@
-#include "../libs/lab_1.hh"
+#include "../libs/maclaurin.hh"
 
 size_t factorial(const  size_t n) {
     size_t res = 1;

@@ -6,12 +6,12 @@ find_package(matplotplusplus)
 set (EXEC_FILE "first_task.exe")
 
 set (SOURCES 
-            srcs/first_task.cc
-            srcs/lab_1.cc
+            srcs/main.cc
+            srcs/maclaurin.cc
     )
 
 add_executable(${EXEC_FILE} ${SOURCES})
-target_include_directories(${EXEC_FILE} PRIVATE include)
+target_include_directories(${EXEC_FILE} PRIVATE libs)
 
 target_compile_features(${EXEC_FILE} PRIVATE cxx_std_20)
 

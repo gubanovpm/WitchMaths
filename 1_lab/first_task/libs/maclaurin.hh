@@ -1,3 +1,6 @@
+#ifndef __maclaurin_hh__
+#define __maclaurin_hh__
+
 #include <iostream>
 #include <functional>
 #include <cmath>
@@ -18,3 +21,5 @@ size_t get_better_approx_n(const std::function<double(const double)> &f,
 
 size_t factorial(const size_t);
 size_t C(const size_t,const size_t);
+
+#endif

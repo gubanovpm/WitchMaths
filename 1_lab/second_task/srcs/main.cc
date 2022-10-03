@@ -1,4 +1,4 @@
-#include "../libs/seidel.hh"
+#include "seidel.hh"
 
 int main () {
     size_t n_upper      = 10 ;

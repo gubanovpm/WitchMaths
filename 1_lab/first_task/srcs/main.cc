@@ -1,4 +1,4 @@
-#include "../libs/maclaurin.hh"
+#include "maclaurin.hh"
 
 using namespace matplot;
 

@@ -2,10 +2,10 @@
 
 int main () {
     size_t n_upper      = 10 ;
-    size_t seidel_upper = 1000;
+    size_t seidel_upper = 10000;
 
     double dt = 0.001;
-    double dx = 0.001;
+    double dx = 0.01;
 
     std::vector<size_t> n_vector = {};
     std::vector<double> a_vector = {};

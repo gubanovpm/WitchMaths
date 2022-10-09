@@ -1,4 +1,4 @@
-#include "../libs/seidel.hh"
+#include "seidel.hh"
 
 matrix<double> get_right_matrix(size_t n, double a) {
     matrix<double> A(n, n);
@@ -56,10 +56,10 @@ matrix<double> &seidel_method::get_k_itter(const size_t k) {
 void seidel_method::get_new_k_itter (const size_t k) {
     matrix<double> new_itter = _d;
     for (size_t i = 0; i < new_itter.size1(); ++i) {
-        for (size_t j = 0; (i != 0) && j < i - 1; ++j) 
-            new_itter(i, 0) += _c(i, j) * new_itter(j, 0);
-        for (size_t j = 0; j < new_itter.size1(); ++j) 
-            new_itter(i, 0) += _c(i, j) * get_k_itter(k - 1)(j, 0);
+        for (size_t j = 0; (i != 0) && j <= i - 1; ++j) {
+            new_itter(i, 0) += _c(i, j) * new_itter(j, 0); }
+        for (size_t j = i; j < new_itter.size1(); ++j) {
+            new_itter(i, 0) += _c(i, j) * get_k_itter(k - 1)(j, 0); }
     }
     _itter.push_back(new_itter);
 }

@@ -9,6 +9,25 @@ size_t C(const size_t n,const size_t k) {
     return factorial(n) / factorial(k) / factorial(n - k);
 }
 
+// double derivative::value(const size_t n, const arg_type x, const double dh, const DERIVATIVE_T type) {
+//     switch (type) {
+//         case CENTRAL: { return __c(n, x, dh); }
+//         case BACK:    { return __b(n, x, dh); }
+//         case FORWARD: { return __f(n, x, dh); }
+//         default:      { return 0; }
+//     }
+// }
+
+//     double derivative::__c(const size_t n, const arg_type x, const double dh) {
+//         if (_val[dh])
+//     }
+//     double derivative::__b(const size_t n, const arg_type x, const double dh) {
+
+//     }
+//     double derivative::__f(const size_t n, const arg_type x, const double dh) {
+
+//     }
+
 double central_derivative(const std::function<double(const double)> &f, const size_t n, const double x, const double dt) {
     double cur_sum = 0;
     if (n == 0) return f(x);

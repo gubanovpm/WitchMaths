@@ -35,7 +35,6 @@ int main() {
             double sum = 0; size_t count = 0;
 
             for (double t = xbegin; t <= xend; t += dt) {
-            // std::cout << "I AM GAY" << std::endl;
                 sum += std::abs(ms[i].value(k, t, dt) - f(t));
                 ++count;
             }

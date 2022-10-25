@@ -1,54 +1,63 @@
 #ifndef __maclaurin_hh__
 #define __maclaurin_hh__
 
-#include <iostream>
-#include <functional>
-#include <vector>
-#include <unordered_map>
-#include <cmath>
 #include <matplot/matplot.h>
+#include <functional>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <map>
 
-double central_derivative(const std::function<double(const double)> &, const size_t n, const double x, const double dt);
-double forward_derivative(const std::function<double(const double)> &, const size_t n, const double x, const double dt);
-double back_derivative   (const std::function<double(const double)> &, const size_t n, const double x, const double dt);
+#define EPSILON 1e-4
 
-// for the future
-// using arg_type      = double;
-// using function_type = std::function<double(const arg_type)>;
+using arg_type      = double;
+using function_type = std::function<double(const arg_type)>;
 
-// struct derivative {
-// public:
-//     enum DERIVATIVE_T {CENTRAL, BACK, FORWARD, D_TYPES};
+struct IDerivative {
+public:
+    IDerivative(const function_type &f):_f(f) {};
 
-//     std::unordered_map<double, std::vector<double>> _val[D_TYPES];
+    virtual double value(const size_t n, const arg_type x, const double dh) = 0; 
+    size_t size() { return _val.size(); }
+    
+    virtual ~IDerivative() {}
+protected:
+    const function_type &_f;
+    std::vector<std::pair<double, std::map<size_t, double>>> _val;
+    size_t __find_it_key(const double dh);
+};
 
-//     derivative(const function_type &f): _f(f) {}
-//     double value(const size_t n, const arg_type x, const double dh, const DERIVATIVE_T type); 
-// private:
-//     const function_type &_f;
+struct c_derivative final: public IDerivative {
+public:
+    c_derivative(const function_type &f): IDerivative(f) {}
+    double value(const size_t n, const arg_type x, const double dh) override;
+};
 
-//     double __c(const size_t n, const arg_type x, const double dh);
-//     double __b(const size_t n, const arg_type x, const double dh);
-//     double __f(const size_t n, const arg_type x, const double dh);
-// };
+struct b_derivative final: public IDerivative {
+public:
+    b_derivative(const function_type &f): IDerivative(f) {}
+    double value(const size_t n, const arg_type x, const double dh) override;
+};
 
-// struct maclaurin_series final {
-// private:
-//     const function_type &_f;
-//     std::vector<double> _val[derivative::D_TYPES] = {};
-// public:
-//     maclaurin_series(const function_type &f) : _f(f) {}
+struct f_derivative final: public IDerivative {
+public:
+    f_derivative(const function_type &f): IDerivative(f) {}
+    double value(const size_t n, const arg_type x, const double dh) override;
+};
 
-//     double get_n(const size_t n, const double x, const double dt);
-//     double value(const size_t n, const double x, const double dt); 
-// };
-double maclaurin_series(const std::function<double(const double)> &f, 
-                        const std::function<double(const std::function<double(const double)> &, const size_t, const double, const double)> &der_f,
-                        double x, size_t n, const double dt);
+struct maclaurin_series final {
+private:
+    IDerivative *_der = nullptr;
+    std::vector<std::pair<double, std::vector<double>>> _val = {};
 
-size_t get_better_approx_n(const std::function<double(const double)> &f, 
-                           const std::function<double(const std::function<double(const double)> &, const size_t, const double, const double)> &der_f,
-                           const size_t kmax, const float dt, const float begin, const float end);
+    size_t __find_key(const double x);
+public:
+    enum D_TYPE {CENTRAL, BACK, FORWARD, D_TYPES};
+    maclaurin_series(const function_type &f, const D_TYPE type);
+    size_t size() { return _der->size(); }
+
+    double value(const size_t n, const double x, const double dt); 
+};
 
 size_t factorial(const size_t);
 size_t C(const size_t,const size_t);

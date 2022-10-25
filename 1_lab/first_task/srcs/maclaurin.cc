@@ -9,75 +9,94 @@ size_t C(const size_t n,const size_t k) {
     return factorial(n) / factorial(k) / factorial(n - k);
 }
 
-// double derivative::value(const size_t n, const arg_type x, const double dh, const DERIVATIVE_T type) {
-//     switch (type) {
-//         case CENTRAL: { return __c(n, x, dh); }
-//         case BACK:    { return __b(n, x, dh); }
-//         case FORWARD: { return __f(n, x, dh); }
-//         default:      { return 0; }
-//     }
-// }
-
-//     double derivative::__c(const size_t n, const arg_type x, const double dh) {
-//         if (_val[dh])
-//     }
-//     double derivative::__b(const size_t n, const arg_type x, const double dh) {
-
-//     }
-//     double derivative::__f(const size_t n, const arg_type x, const double dh) {
-
-//     }
-
-double central_derivative(const std::function<double(const double)> &f, const size_t n, const double x, const double dt) {
-    double cur_sum = 0;
-    if (n == 0) return f(x);
-    for (size_t i = 0; i <= n; ++i) {
-        cur_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * f(x + (n - double(2*i)) * dt);
-    }
-    return cur_sum / std::pow(2*dt, n);
+size_t IDerivative::__find_it_key(const double dh){
+    for (size_t i = 0; i < _val.size(); ++i)
+        if (std::abs(_val[i].first - dh) <= EPSILON) { return i; }
+    return -1;
 }
 
-double forward_derivative(const std::function<double(const double)> &f, const size_t n, const double x, const double dt) {
-    double cur_sum = 0;
-    if (n == 0) return f(x);
-    for (size_t i = 0; i <= n; ++i) {
-        cur_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * f(x + (n - double(i)) * dt);
+double c_derivative::value(const size_t n, const arg_type x, const double dh) {
+    size_t key = __find_it_key(dh);
+    if (key != -1 && _val[key].second.size() > n) return _val[key].second[n];
+    if (key == -1) { key = _val.size() ; _val.push_back({dh, {}}); }
+
+    if (_val[key].second.size() == 0) {
+        _val[key].second[0] = _f(x); return _val[key].second[0];
     }
-    return cur_sum / std::pow(dt, n);
+
+    double t_sum = 0;
+    for (size_t i = 0; i <= n; ++i) {
+        t_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * _f(x + (n - double(2*i)) * dh);
+    }
+
+    _val[key].second[n] = t_sum / std::pow(2*dh, n);
+    return _val[key].second[n];
 }
 
-double back_derivative(const std::function<double(const double)> &f, const size_t n, const double x, const double dt) {
-    double cur_sum = 0;
-    if (n == 0) return f(x);
-    for (size_t i = 0; i <= n; ++i) {
-        cur_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * f(x - (double(i)) * dt);
+double b_derivative::value(const size_t n, const arg_type x, const double dh) {
+    size_t key = __find_it_key(dh);
+    if (key != -1 && _val[key].second.size() > n) return _val[key].second[n];
+    if (key == -1) { 
+        key = _val.size(); _val.push_back({dh, {}});
     }
-    return cur_sum / std::pow(dt, n);
+
+    if (_val[key].second.size() == 0) {
+        _val[key].second[0] = _f(x);
+        return _val[key].second[0];
+    }
+
+    double t_sum = 0;
+    for (size_t i = 0; i <= n; ++i) {
+        t_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * _f(x - (double(i)) * dh);
+    }
+    _val[key].second[n] = t_sum / std::pow(dh, n);
+    return _val[key].second[n];
 }
 
-double maclaurin_series(const std::function<double(const double)> &f, 
-                        const std::function<double(const std::function<double(const double)> &, const size_t, const double, const double)> &der_f,
-                        double x, size_t n, const double dt) {
-    double cur_sum = 0;
-    for (size_t i = 0; i <= n; ++i) {
-        cur_sum += double(std::pow(x, i)) * der_f(f, i, 0, dt) / factorial(i);
+double f_derivative::value(const size_t n, const arg_type x, const double dh) {
+    size_t key = __find_it_key(dh);
+    if (key != -1 && _val[key].second.size() > n) return _val[key].second[n];
+    if (key == -1) { 
+        key = _val.size(); _val.push_back({dh, {}});
     }
-    return cur_sum;
+
+    if (_val[key].second.size() == 0) {
+        _val[key].second[0] = _f(x);
+        return _val[key].second[0];
+    }
+
+    double t_sum = 0;
+    for (size_t i = 0; i <= n; ++i) {
+        t_sum += double(C(n, i)) * ((i % 2) ? -1 : 1) * _f(x + (n - double(i)) * dh);
+    }
+    _val[key].second[n] = t_sum / std::pow(dh, n);
+    return _val[key].second[n];
 }
 
-size_t get_better_approx_n(const std::function<double(const double)> &f, 
-                           const std::function<double(const std::function<double(const double)> &, const size_t, const double, const double)> &der_f,
-                           const size_t kmax, const float dt, const float begin, const float end) {
-    bool is_in_epsilon = 0;
-    size_t n = 0;
-    for (size_t k = 1; k <= kmax; ++k) {
-        is_in_epsilon = 1;
-        for (float cur = begin; cur <= end; cur += dt) {
-            if (std::abs(maclaurin_series(f, der_f, cur, k, dt) - f(cur)) > 2 * dt) {
-                is_in_epsilon = 0; break;
-            }
-        }
-        if (is_in_epsilon) n = k;
+maclaurin_series::maclaurin_series(const function_type &f, const D_TYPE type) {
+    switch (type) {
+        case CENTRAL: { _der = new c_derivative(f); break; }
+        case FORWARD: { _der = new f_derivative(f); break; }
+        case BACK   : { _der = new b_derivative(f); break; }
+        default: throw;
     }
-    return n;
+}
+
+size_t maclaurin_series::__find_key(const double x) {
+    for (size_t i = 0; i < _val.size(); ++i)
+        if (std::abs(_val[i].first - x) <= EPSILON) { return i; }
+    return -1;
+}
+
+double maclaurin_series::value(const size_t n, const double x, const double dt) {
+    size_t key = __find_key(x);
+    if (key != -1 && _val[key].second.size() > n) return _val[key].second[n];
+    if (key == -1) { key = _val.size(); _val.push_back({x, {}}); }
+
+    if (_val[key].second.size() == 0) _val[key].second.push_back(_der->value(0, 0, dt));
+    for (size_t k = _val[key].second.size(); k <= n; ++k) {
+        _val[key].second.push_back(_val[key].second[k - 1] + std::pow(x, k) * _der->value(k, 0, dt) / factorial(k));
+    }
+    return _val[key].second[n];
+
 }

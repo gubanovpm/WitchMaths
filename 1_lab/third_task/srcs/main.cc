@@ -2,6 +2,7 @@
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <matplot/matplot.h>
 
 using namespace boost::numeric::ublas;
 
@@ -82,88 +83,103 @@ int main() {
     //==============================================================================================================================================
     // Основная функция
     //==============================================================================================================================================
-    double PHI = 0;
-    for (size_t pairs_count = 0; pairs_count < std::min(T.size1(), P.size1()); ++pairs_count) {
-        // Сбросим значения для первой итерации
-        z(0, 0) = 0.0189, z(1, 0) = 0.1567, z(2, 0) = 0.8244;
-        size_t iteration = 0;
-        matrix<double> c_g = {3, 1}, c_l = {3, 1};
-        matrix<double> c_g_star = {3, 1}, c_l_star = {3, 1};
-        matrix<double> K  = {3, 1};
-        matrix<double> Tr = {3, 1};
-        matrix<double> Pr = {3, 1};
-        matrix<double> m  = {3, 1};
-        matrix<double> OmegaA = {3, 1};
-        matrix<double> a_i  = {3, 1};
-        matrix<double> b_i  = {3, 1};
-        
-        matrix<double> a_ij = {3, 3};
-        matrix<double> s_i = {3, 1};
-        
-        // Вызов лямбда функций для заполнения соответствующих векторов
-        for (size_t i = 0; i < 3; ++i) {
-            Tr(i, 0) = get_Tr_i(T(pairs_count, 0), Tc(i, 0));
-            Pr(i, 0) = get_Pr_i(P(pairs_count, 0), Pc(i, 0));
-            m(i, 0) = get_m_i(omega(i, 0));
-            OmegaA(i, 0) = get_OmegaA_i(OmegaA0(i, 0), m(i, 0), Tr(i, 0));
-            K(i, 0)   = get_K_i(omega(i, 0), Tr(i, 0), Pr(i, 0));
-            b_i(i, 0) = get_b_i(OmegaB(i, 0) , Pr(i, 0), Tr(i, 0));
-            a_i(i, 0) = get_a_i(OmegaA0(i, 0), Pr(i, 0), Tr(i, 0));
-        }
-
-        for (size_t i = 0; i < 3; ++i) {
-            for (size_t j = 0; j < 3; ++j) {
-                a_ij(i, j) = get_a_ij(k(i, j), a_i(i, 0), a_i(j, 0));
-            }
-        }
-
-        while (true) {
-            // рассчитаем коэффициент квадратоного уравнения (в данном случае это будут решения квадратного уравнения)
-            double a_koef = (z(0, 0) + z(1, 0) + z(2, 0)) * (K(0, 0)-1) * (K(1, 0)-1) * (K(2, 0)-1) ;
-            double b_koef = z(0, 0) * (K(0, 0) - 1) * (K(1, 0) + K(2, 0) - 2) +
-                            z(1, 0) * (K(1, 0) - 1) * (K(0, 0) + K(2, 0) - 2) +
-                            z(2, 0) * (K(2, 0) - 1) * (K(0, 0) + K(1, 0) - 2);
-            double c_koef = z(0, 0) * (K(0, 0) - 1) + z(1, 0) * (K(1, 0) - 1) + z(2, 0) * (K(2, 0) - 1);
-            double D = std::pow(b_koef, 2) - 4 * a_koef * c_koef;
-            // std::cout << "Корни по альфа: " <<  (-b_koef - std::sqrt(D)) / (2 * a_koef) << " " << (-b_koef + std::sqrt(D)) / (2 * a_koef) << std::endl;
-
-            // I don't know how we are must calc two roots of equation
-            double Z_l = 1, Z_g = 1;
-
-            double alpha = (-b_koef + std::sqrt(D)) / (2 * a_koef);
-            // here's strange partition of code
-            c_g(0, 0) = z(0, 0) * K(0, 0) / (alpha * (K(0,0) - 1) + 1);
-            c_l(0, 0) = z(0, 0) / (alpha * (K(0,0) - 1) + 1);
+    std::vector<double> phi = {0.25, 0.5, 0.75};
+    std::vector<double> x = {};
+    std::vector<size_t> y = {};
+    
+    for (size_t i = 0; i < phi.size(); ++i) {
+        double PHI = phi[i];
+        for (size_t pairs_count = 0; pairs_count < std::min(T.size1(), P.size1()); ++pairs_count) {
+            // Сбросим значения для первой итерации
+            z(0, 0) = 0.0189, z(1, 0) = 0.1567, z(2, 0) = 0.8244;
+            size_t iteration = 0;
+            matrix<double> c_g = {3, 1}, c_l = {3, 1};
+            matrix<double> c_g_star = {3, 1}, c_l_star = {3, 1};
+            matrix<double> K  = {3, 1};
+            matrix<double> Tr = {3, 1};
+            matrix<double> Pr = {3, 1};
+            matrix<double> m  = {3, 1};
+            matrix<double> OmegaA = {3, 1};
+            matrix<double> a_i  = {3, 1};
+            matrix<double> b_i  = {3, 1};
             
-            for (size_t i = 1; i < 3; ++i) {
-                c_g_star(i, 0) = z(i, 0) * K(i, 0) / ( lambdas(i, 0) * (K(i, 0) - 1) + 1);
-                c_g(i , 0) = PHI * c_g_star(i, 0) + (1 - PHI) * c_g(i - 1, 0);
-
-                c_l_star(i, 0) = z(i, 0) / ( lambdas(i, 0) * (K(i, 0) - 1) + 1);
-                c_l(i , 0) = PHI * c_l_star(i, 0) + (1 - PHI) * c_l(i - 1, 0);
-            }
-
-            double a_l = get_a(a_ij, c_l), a_g = get_a(a_ij, c_g);
-            double b_l = get_b(b_i , c_l), b_g = get_b(b_i , c_g);
-
-            matrix<double> f_l = {3, 1}, f_g = {3, 1};
+            matrix<double> a_ij = {3, 3};
+            matrix<double> s_i = {3, 1};
+            
+            // Вызов лямбда функций для заполнения соответствующих векторов
             for (size_t i = 0; i < 3; ++i) {
-                f_l(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_l(i, 0), Z_l, a_l, b_l, s_i(i, 0), a_i(i, 0), b_i(i, 0));
-                f_g(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_g(i, 0), Z_g, a_g, b_g, s_i(i, 0), a_i(i, 0), b_i(i, 0));
-                K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
+                Tr(i, 0) = get_Tr_i(T(pairs_count, 0), Tc(i, 0));
+                Pr(i, 0) = get_Pr_i(P(pairs_count, 0), Pc(i, 0));
+                m(i, 0) = get_m_i(omega(i, 0));
+                OmegaA(i, 0) = get_OmegaA_i(OmegaA0(i, 0), m(i, 0), Tr(i, 0));
+                K(i, 0)   = get_K_i(omega(i, 0), Tr(i, 0), Pr(i, 0));
+                b_i(i, 0) = get_b_i(OmegaB(i, 0) , Pr(i, 0), Tr(i, 0));
+                a_i(i, 0) = get_a_i(OmegaA0(i, 0), Pr(i, 0), Tr(i, 0));
             }
 
-            bool flag = true;
             for (size_t i = 0; i < 3; ++i) {
-                flag = (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
-                if (!flag) break;
+                for (size_t j = 0; j < 3; ++j) {
+                    a_ij(i, j) = get_a_ij(k(i, j), a_i(i, 0), a_i(j, 0));
+                }
             }
 
-            if (flag || (iteration == 10000)) break;
-            ++iteration;
+            while (true) {
+                // рассчитаем коэффициент квадратоного уравнения (в данном случае это будут решения квадратного уравнения)
+                double a_koef = (z(0, 0) + z(1, 0) + z(2, 0)) * (K(0, 0)-1) * (K(1, 0)-1) * (K(2, 0)-1) ;
+                double b_koef = z(0, 0) * (K(0, 0) - 1) * (K(1, 0) + K(2, 0) - 2) +
+                                z(1, 0) * (K(1, 0) - 1) * (K(0, 0) + K(2, 0) - 2) +
+                                z(2, 0) * (K(2, 0) - 1) * (K(0, 0) + K(1, 0) - 2);
+                double c_koef = z(0, 0) * (K(0, 0) - 1) + z(1, 0) * (K(1, 0) - 1) + z(2, 0) * (K(2, 0) - 1);
+                double D = std::pow(b_koef, 2) - 4 * a_koef * c_koef;
+                // std::cout << "Корни по альфа: " <<  (-b_koef - std::sqrt(D)) / (2 * a_koef) << " " << (-b_koef + std::sqrt(D)) / (2 * a_koef) << std::endl;
+
+                // I don't know how we are must calc two roots of equation
+                double Z_l = 0.01, Z_g = 0.01;
+
+                double alpha = (-b_koef + std::sqrt(D)) / (2 * a_koef);
+                // here's strange partition of code
+                c_g(0, 0) = z(0, 0) * K(0, 0) / (alpha * (K(0,0) - 1) + 1);
+                c_l(0, 0) = z(0, 0) / (alpha * (K(0,0) - 1) + 1);
+                
+                for (size_t i = 1; i < 3; ++i) {
+                    c_g_star(i, 0) = z(i, 0) * K(i, 0) / ( lambdas(i, 0) * (K(i, 0) - 1) + 1);
+                    c_g(i , 0) = PHI * c_g_star(i, 0) + (1 - PHI) * c_g(i - 1, 0);
+
+                    c_l_star(i, 0) = z(i, 0) / ( lambdas(i, 0) * (K(i, 0) - 1) + 1);
+                    c_l(i , 0) = PHI * c_l_star(i, 0) + (1 - PHI) * c_l(i - 1, 0);
+                }
+
+                double a_l = get_a(a_ij, c_l), a_g = get_a(a_ij, c_g);
+                double b_l = get_b(b_i , c_l), b_g = get_b(b_i , c_g);
+
+                matrix<double> f_l = {3, 1}, f_g = {3, 1};
+                for (size_t i = 0; i < 3; ++i) {
+                    f_l(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_l(i, 0), Z_l, a_l, b_l, s_i(i, 0), a_i(i, 0), b_i(i, 0));
+                    f_g(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_g(i, 0), Z_g, a_g, b_g, s_i(i, 0), a_i(i, 0), b_i(i, 0));
+                    K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
+                }
+
+                std::cout << f_l << std::endl;
+                std::cout << f_g << std::endl;
+
+                bool flag = true;
+                for (size_t i = 0; i < 3; ++i) {
+                    flag = (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
+                    if (!flag) break;
+                }
+
+                if (flag || (iteration == 10000)) break;
+                ++iteration;
+            }
+            x.push_back(PHI);
+            y.push_back(iteration);
         }
-        std::cout << iteration << std::endl;
     }
+
+    matplot::plot(x, y)->line_width(1).color("red");
+    matplot::xlabel("Параметр Фи");
+    matplot::ylabel("Количество итераций");
+    matplot::show();
     
     return 0;
 }

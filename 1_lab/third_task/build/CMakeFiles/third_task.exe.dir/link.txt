@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/third_task.exe.dir/srcs/main.cc.o -o third_task.exe  -lmatplot 

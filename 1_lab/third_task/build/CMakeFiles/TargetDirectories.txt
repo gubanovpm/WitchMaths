@@ -1,0 +1,3 @@
+/home/shodan/WhitchMeths/1_lab/third_task/build/CMakeFiles/third_task.exe.dir
+/home/shodan/WhitchMeths/1_lab/third_task/build/CMakeFiles/edit_cache.dir
+/home/shodan/WhitchMeths/1_lab/third_task/build/CMakeFiles/rebuild_cache.dir

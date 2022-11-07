@@ -19,7 +19,7 @@ int main() {
     matrix<double> M  = {3, 1}; // кг/моль
     M(0, 0) = 0.028013, M(1, 0) = 0.04401, M(2, 0) = 0.03007;
     matrix<double> Pc = {3, 1}; // Па
-    Pc(0, 0) = 339440, Pc(1, 0) = 738660, Pc(2, 0) = 488390;
+    Pc(0, 0) = 3394400, Pc(1, 0) = 7386600, Pc(2, 0) = 4883900;
     matrix<double> Tc = {3, 1}; // К
     Tc(0, 0) = 126.2, Tc(1, 0) = 304.7, Tc(2, 0) = 305.43;
 
@@ -40,15 +40,16 @@ int main() {
     //========================================================================================
     // Пользовательские данные (вторая размерность =2 так как по заданию для двух пар (T, P))
     //========================================================================================
-    matrix<double> T = {3, 1}; // К
-    T(0, 0) = 200, T(1, 0) = 200, T(2, 0) = 200;
+    matrix<double> T = {1, 1}; // К
+    T(0, 0) = 250/*, T(1, 0) = 200, T(2, 0) = 200*/;
+    
 
     matrix<double> P = {3, 1}; // Па
-    P(0, 0) = 200000, P(1, 0) = 200000, P(2, 0) = 200000;
+    P(0, 0) = 2000000, P(1, 0) = 2000000, P(2, 0) = 2000000;
     //==============================================================================================================================================
     // Вспомогательные лямбда-функции
     //==============================================================================================================================================
-    auto get_K_i  = [](double omega_i, double T_ri, double P_ci) { return std::exp(5.373*(1-omega_i)) * (1 - 1/T_ri) * P_ci; };
+    auto get_K_i  = [](double omega_i, double T_ri, double P_ri) { return std::exp(5.372697*(3.6 + omega_i) * (1 - 1./T_ri)) / P_ri; };
     auto get_Tr_i = [](double T_i, double T_ci) { return T_i / T_ci; };
     auto get_Pr_i = [](double P_i, double P_ci) { return P_i / P_ci; };
     auto get_m_i  = [](double omega_i) { return 0.37964 + 1.408503 * omega_i - 0.16442*std::pow(omega_i, 2) + 0.016666 * std::pow(omega_i, 3); };
@@ -82,10 +83,18 @@ int main() {
         return std::log(_p * _c_i) - std::log(_Z - _b) + _a / (2 * std::sqrt(2) * _b) * (2*_s_i/_a - _b_i/_b) * std::log((_Z - (std::sqrt(2) - 1) * _b) / (_Z + (std::sqrt(2) + 1) * _b)) + _b_i/_b * (_Z - 1);
     };
 
+    auto function_alpha = [] (const matrix<double> &K, const matrix<double> &z, const double alpha) { 
+        double sum = 0;
+        for (size_t i = 0 ; i < K.size1(); ++i) {
+            sum += ((z(i, 0) * (K(i, 0) - 1))/(alpha * (K(i, 0) - 1) + 1));
+        }
+        return sum;
+    };
+
     //==============================================================================================================================================
     // Основная функция
     //==============================================================================================================================================
-    std::vector<double> phi = {0.75};
+    std::vector<double> phi = {1.};
     // size_t count = 100;
     // for (size_t i = 0 ; i < count; ++i) phi.push_back(double(i)/count);
 
@@ -121,6 +130,7 @@ int main() {
                 b_i(i, 0) = get_b_i(OmegaB(i, 0) , Pr(i, 0), Tr(i, 0));
                 a_i(i, 0) = get_a_i(OmegaA0(i, 0), Pr(i, 0), Tr(i, 0));
             }
+            // std::cout << K << std::endl;
 
             for (size_t i = 0; i < 3; ++i) {
                 for (size_t j = 0; j < 3; ++j) {
@@ -129,6 +139,7 @@ int main() {
             }
 
             while (true) {
+
                 // рассчитаем коэффициент квадратоного уравнения (в данном случае это будут решения квадратного уравнения)
                 double a_koef = (z(0, 0) + z(1, 0) + z(2, 0)) * (K(0, 0)-1) * (K(1, 0)-1) * (K(2, 0)-1) ;
                 double b_koef = z(0, 0) * (K(0, 0) - 1) * (K(1, 0) + K(2, 0) - 2) +
@@ -136,19 +147,41 @@ int main() {
                                 z(2, 0) * (K(2, 0) - 1) * (K(0, 0) + K(1, 0) - 2);
                 double c_koef = z(0, 0) * (K(0, 0) - 1) + z(1, 0) * (K(1, 0) - 1) + z(2, 0) * (K(2, 0) - 1);
                 double D = std::pow(b_koef, 2) - 4 * a_koef * c_koef;
+
+                double xx1 = (-b_koef - std::sqrt(D)) / (2 * a_koef), xx2 = (-b_koef + std::sqrt(D)) / (2 * a_koef);
+
                 // std::cout << "Корни по альфа: " <<  (-b_koef - std::sqrt(D)) / (2 * a_koef) << " " << (-b_koef + std::sqrt(D)) / (2 * a_koef) << std::endl;
 
-                double alpha = (-b_koef + std::sqrt(D)) / (2 * a_koef);
+                // Дихотомия
+                double l_bound = 0, r_bound = 1, value , stop = 0;
+                double l_sign = function_alpha(K, z, l_bound);
+                double r_sign = function_alpha(K, z, r_bound);
+                while (std::abs(value = function_alpha(K, z, (l_bound + r_bound) / 2)) > EPSILON && stop != 1000) {
+                    if (value * l_sign > 0) l_bound = (l_bound + r_bound) / 2;
+                    if (value * r_sign > 0) r_bound = (l_bound + r_bound) / 2;
+                    ++stop;
+
+                    // std::cout << (l_bound + r_bound) / 2 << std::endl;
+                }
+
+                std::cout << (l_bound + r_bound) / 2 << std::endl;
+                double alpha = (l_bound + r_bound) / 2;
+                //  double alpha = (std::abs(xx1) < 1 ? xx1 : xx2 );
+                std::cout << "alpha = " << alpha << std::endl;
                 // here's strange partition of code
-                c_g(0, 0) = z(0, 0) * K(0, 0) / (alpha * (K(0,0) - 1) + 1);
-                c_l(0, 0) = z(0, 0) / (alpha * (K(0,0) - 1) + 1);
-                
-                for (size_t i = 1; i < 3; ++i) {
+                if (iteration == 0)
+                for (size_t i = 0; i < 3; ++i) {
+                    c_g(i, 0) = z(i, 0) * K(i, 0) / (alpha * (K(i,0) - 1) + 1);
+                    c_l(i, 0) = z(i, 0) / (alpha * (K(i,0) - 1) + 1);
+                }
+
+                if (iteration != 0)
+                for (size_t i = 0; i < 3; ++i) {
                     c_g_star(i, 0) = z(i, 0) * K(i, 0) / ( alpha * (K(i, 0) - 1) + 1);
-                    c_g(i , 0) = PHI * c_g_star(i, 0) + (1 - PHI) * c_g(i - 1, 0);
+                    c_g(i , 0) = PHI * c_g_star(i, 0) + (1 - PHI) * c_g(i , 0);
 
                     c_l_star(i, 0) = z(i, 0) / ( alpha * (K(i, 0) - 1) + 1);
-                    c_l(i , 0) = PHI * c_l_star(i, 0) + (1 - PHI) * c_l(i - 1, 0);
+                    c_l(i , 0) = PHI * c_l_star(i, 0) + (1 - PHI) * c_l(i, 0);
                 }
 
                 double a_l = get_a(a_ij, c_l), a_g = get_a(a_ij, c_g);
@@ -161,8 +194,8 @@ int main() {
 
                 // Решим кубическое уравнение тригонометрическим способом
                 double a_c_l = b_l - 1, b_c_l = a_l - 2 * b_l - 3 * std::pow(b_l, 2), c_c_l = std::pow(b_l, 3) + std::pow(b_l, 2) - a_l * b_l;
-                double Q_l = -(3*b_c_l - std::pow(a_c_l, 2)) / 9;
-                double R_l = -(9*a_c_l*b_c_l - 2 * std::pow(a_c_l, 3) - 27 * c_c_l) / 54;
+                double Q_l = (3*b_c_l - std::pow(a_c_l, 2)) / 9;
+                double R_l = (9*a_c_l*b_c_l - 2 * std::pow(a_c_l, 3) - 27 * c_c_l) / 54;
                 double S_l = std::pow(Q_l,  3) - std::pow(R_l, 2);
 
                 double a_c_g = b_g - 1, b_c_g = a_g - 2 * b_g - 3 * std::pow(b_g, 2), c_c_g = std::pow(b_g, 3) + std::pow(b_g, 2) - a_g * b_g;
@@ -180,7 +213,7 @@ int main() {
 
                 if (S_l > EPS) {
                     psi_l = 1./3 * std::acos(R_l / std::sqrt(std::pow(Q_l, 3)));
-                    std::cout << "psi L " <<-2. * std::sqrt(Q_l) * std::cos(psi_l) << std::endl;
+                    // std::cout << "psi L " <<-2. * std::sqrt(Q_l) * std::cos(psi_l) << std::endl;
                     x_1 = -2. * std::sqrt(Q_l) * std::cos(psi_l) - a_c_l / 3.;
                     x_2 = -2. * std::sqrt(Q_l) * std::cos(psi_l + M_PI * 2./3) - a_c_l / 3.;
                     x_3 = -2. * std::sqrt(Q_l) * std::cos(psi_l - M_PI * 2./3) - a_c_l / 3.;
@@ -188,7 +221,7 @@ int main() {
                     if (x_2 > 0) x.push_back(x_2);
                     if (x_3 > 0) x.push_back(x_3);
 
-                    std::cout << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
+                    // std::cout << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
                 } else if (S_l < -EPS) {
                     if (Q_l > EPS) {
                         psi_l = 1./3 * std::acosh(std::abs(R_l) / std::sqrt(std::abs(std::pow(Q_l, 3))));
@@ -206,7 +239,9 @@ int main() {
                     }                  
                 }
 
-                // x = {};
+                if (x.size() > 0)
+                    t_1 = *std::min_element(x.begin(), x.end());
+                x = {};
                 if (S_g > EPS) {
                     psi_g = 1./3 * std::acos(R_g / std::sqrt(std::pow(Q_g, 3)));
                     x_1 = -2 * std::sqrt(Q_g) * std::cos(psi_g) - a_c_g/3;
@@ -234,11 +269,16 @@ int main() {
                 }
 
                 if (x.size() > 0)
-                    t_1 = *std::min_element(x.begin(), x.end());
-                if (x.size() > 0)
                     t_2 = *std::max_element(x.begin(), x.end());
 
-                std::cout << Q_l << " ; " << R_l << " ; "  << S_l << " >> " << psi_l << " " << t_1 << std::endl;
+
+                std::cout << t_1 << " ; " << t_2 << std::endl;
+                // for (size_t i = 0; i < 3 ; ++i)
+                //     std::cout << c_g(i, 0) << std::endl;
+                // for (size_t i = 0; i < 3 ; ++i)
+                //     std::cout << c_l(i, 0) << std::endl;
+
+                // std::cout << Q_l << " ; " << R_l << " ; "  << S_l << " >> " << psi_l << " " << t_1 << std::endl;
                 // std::cout << Q_g << " ; " << R_g << " ; "  << S_g << " >> " << psi_g << " " << t_2 << std::endl;
 
                 matrix<double> f_l = {3, 1}, f_g = {3, 1};
@@ -246,20 +286,22 @@ int main() {
                     f_l(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_l(i, 0), t_1, a_l, b_l, s_l_i(i, 0), a_i(i, 0), b_i(i, 0));
                     f_g(i, 0) = get_f_i(P(pairs_count, 0), T(pairs_count, 0), c_g(i, 0), t_2, a_g, b_g, s_g_i(i, 0), a_i(i, 0), b_i(i, 0));
                     K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
-                    std::cout << f_l << " ; " << f_g << std::endl;
                 }
 
+                std::cout << c_l << std::endl << c_g << std::endl << z << std::endl << std::endl;;
                 bool flag = true;
                 for (size_t i = 0; i < 3; ++i) {
                     flag &= (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
                     if (!flag) break;
                 }
 
-                if (flag || (iteration == 1000)) break;
+                if (flag || (iteration == 20)) break;
                 ++iteration;
 
-                break;
+                // if (iteration == 3) break;
             }
+            std::cout << "liq : " << c_l << std::endl;
+            std::cout << "gaze : " << c_g << std::endl << std::endl;
             x.push_back(PHI);
             y.push_back(iteration);
         }

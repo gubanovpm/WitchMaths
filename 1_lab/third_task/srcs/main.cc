@@ -139,7 +139,6 @@ int main() {
             }
 
             while (true) {
-
                 // рассчитаем коэффициент квадратоного уравнения (в данном случае это будут решения квадратного уравнения)
                 double a_koef = (z(0, 0) + z(1, 0) + z(2, 0)) * (K(0, 0)-1) * (K(1, 0)-1) * (K(2, 0)-1) ;
                 double b_koef = z(0, 0) * (K(0, 0) - 1) * (K(1, 0) + K(2, 0) - 2) +
@@ -160,15 +159,11 @@ int main() {
                     if (value * l_sign > 0) l_bound = (l_bound + r_bound) / 2;
                     if (value * r_sign > 0) r_bound = (l_bound + r_bound) / 2;
                     ++stop;
-
-                    // std::cout << (l_bound + r_bound) / 2 << std::endl;
                 }
 
-                std::cout << (l_bound + r_bound) / 2 << std::endl;
                 double alpha = (l_bound + r_bound) / 2;
-                //  double alpha = (std::abs(xx1) < 1 ? xx1 : xx2 );
                 std::cout << "alpha = " << alpha << std::endl;
-                // here's strange partition of code
+
                 if (iteration == 0)
                 for (size_t i = 0; i < 3; ++i) {
                     c_g(i, 0) = z(i, 0) * K(i, 0) / (alpha * (K(i,0) - 1) + 1);
@@ -194,8 +189,8 @@ int main() {
 
                 // Решим кубическое уравнение тригонометрическим способом
                 double a_c_l = b_l - 1, b_c_l = a_l - 2 * b_l - 3 * std::pow(b_l, 2), c_c_l = std::pow(b_l, 3) + std::pow(b_l, 2) - a_l * b_l;
-                double Q_l = (3*b_c_l - std::pow(a_c_l, 2)) / 9;
-                double R_l = (9*a_c_l*b_c_l - 2 * std::pow(a_c_l, 3) - 27 * c_c_l) / 54;
+                double Q_l = -(3*b_c_l - std::pow(a_c_l, 2)) / 9;
+                double R_l = -(9*a_c_l*b_c_l - 2 * std::pow(a_c_l, 3) - 27 * c_c_l) / 54;
                 double S_l = std::pow(Q_l,  3) - std::pow(R_l, 2);
 
                 double a_c_g = b_g - 1, b_c_g = a_g - 2 * b_g - 3 * std::pow(b_g, 2), c_c_g = std::pow(b_g, 3) + std::pow(b_g, 2) - a_g * b_g;
@@ -203,13 +198,16 @@ int main() {
                 double R_g = -(9*a_c_g*b_c_g - 2 * std::pow(a_c_g, 3) - 27 * c_c_g) / 54;
                 double S_g = std::pow(Q_g,  3) - std::pow(R_g, 2);
 
+
                 double psi_l = 0, psi_g = 0;
                 double t_1 = 0, t_2 = 0;
-                double x_1, x_2, x_3;
+                double x_1 = 0, x_2 = 0, x_3 = 0;
                 std::vector<double> x = {};
 
                 // std::cout << "x^3 + " <<  a_c_l << " x^2 + " << b_c_l << " x + " << c_c_l << std::endl;
+                // std::cout << "for first equation:  " << Q_l << " ; " << R_l << " ; " << S_l << std::endl;
                 // std::cout << "x^3 + " <<  a_c_g << " x^2 + " << b_c_g << " x + " << c_c_g << std::endl; 
+                // std::cout << "for second equation: " << Q_g << " ; " << R_g << " ; " << S_g << std::endl;
 
                 if (S_l > EPS) {
                     psi_l = 1./3 * std::acos(R_l / std::sqrt(std::pow(Q_l, 3)));
@@ -221,65 +219,71 @@ int main() {
                     if (x_2 > 0) x.push_back(x_2);
                     if (x_3 > 0) x.push_back(x_3);
 
-                    // std::cout << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
+                    std::cout << "first roots: " << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
                 } else if (S_l < -EPS) {
                     if (Q_l > EPS) {
                         psi_l = 1./3 * std::acosh(std::abs(R_l) / std::sqrt(std::abs(std::pow(Q_l, 3))));
-                        double siln_R_l = (R_l == 0 ? 0. : R_l / std::abs(R_l));
-                        x_2 = -2. * siln_R_l * std::sqrt(std::abs(Q_l)) * std::cosh(psi_l) - a_c_l / 3;
+                        double sign_R_l = (R_l == 0 ? 0. : R_l / std::abs(R_l));
+                        x_1 = -2. * sign_R_l * std::sqrt(std::abs(Q_l)) * std::cosh(psi_l) - a_c_l / 3;
 
-                        if (x_2 > 0) x.push_back(x_2);
+                        if (x_1 > 0) x.push_back(x_1);
                     }
-                    else {
+                    else if (Q_l < -EPS) {
                         psi_l = 1./3 * std::asinh(std::abs(R_l) / std::sqrt(std::abs(std::pow(Q_l, 3))));
-                        double siln_R_l = (R_l == 0 ? 0. : R_l / std::abs(R_l));
-                        x_2 = -2. * siln_R_l * std::sqrt(std::abs(Q_l)) * std::sinh(psi_l) - a_c_l / 3;
+                        double sign_R_l = (R_l == 0 ? 0. : R_l / std::abs(R_l));
+                        x_1 = -2. * sign_R_l * std::sqrt(std::abs(Q_l)) * std::sinh(psi_l) - a_c_l / 3;
 
-                        if (x_2 > 0) x.push_back(x_2);
-                    }                  
+                        if (x_1 > 0) x.push_back(x_1);
+                    } else {
+                        x_1 = -std::pow(c_c_l - std::pow(a_c_l, 3) / 27, 1./3) - a_c_l/3;
+                        if(x_1 > 0) x.push_back(x_1);
+                    }
                 }
 
                 if (x.size() > 0)
                     t_1 = *std::min_element(x.begin(), x.end());
                 x = {};
+
                 if (S_g > EPS) {
                     psi_g = 1./3 * std::acos(R_g / std::sqrt(std::pow(Q_g, 3)));
-                    x_1 = -2 * std::sqrt(Q_g) * std::cos(psi_g) - a_c_g/3;
-                    x_2 = -2 * std::sqrt(Q_g) * std::cos(psi_g + M_PI * 2/3) - a_c_g / 3;
-                    x_3 = -2 * std::sqrt(Q_g) * std::cos(psi_g - M_PI * 2/3) - a_c_g / 3;
+                    // std::cout << "psi L " <<-2. * std::sqrt(Q_g) * std::cos(psi_g) << std::endl;
+                    x_1 = -2. * std::sqrt(Q_g) * std::cos(psi_g) - a_c_g / 3.;
+                    x_2 = -2. * std::sqrt(Q_g) * std::cos(psi_g + M_PI * 2./3) - a_c_g / 3.;
+                    x_3 = -2. * std::sqrt(Q_g) * std::cos(psi_g - M_PI * 2./3) - a_c_g / 3.;
                     if (x_1 > 0) x.push_back(x_1);
                     if (x_2 > 0) x.push_back(x_2);
                     if (x_3 > 0) x.push_back(x_3);
 
+                    // std::cout << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
                 } else if (S_g < -EPS) {
                     if (Q_g > EPS) {
                         psi_g = 1./3 * std::acosh(std::abs(R_g) / std::sqrt(std::abs(std::pow(Q_g, 3))));
                         double sign_R_g = (R_g == 0 ? 0. : R_g / std::abs(R_g));
-                        x_2 = -2. * sign_R_g * std::sqrt(std::abs(Q_g)) * std::cosh(psi_g) - a_c_g / 3;
+                        x_1 = -2. * sign_R_g * std::sqrt(std::abs(Q_g)) * std::cosh(psi_g) - a_c_g / 3;
 
-                        if (x_2 > 0) x.push_back(x_2);
+                        if (x_1 > 0) x.push_back(x_1);
                     }
-                    else {
+                    else if (Q_g < -EPS) {
                         psi_g = 1./3 * std::asinh(std::abs(R_g) / std::sqrt(std::abs(std::pow(Q_g, 3))));
                         double sign_R_g = (R_g == 0 ? 0. : R_g / std::abs(R_g));
-                        x_2 = -2. * sign_R_g * std::sqrt(std::abs(Q_g)) * std::sinh(psi_g) - a_c_g / 3;
+                        x_1 = -2. * sign_R_g * std::sqrt(std::abs(Q_g)) * std::sinh(psi_g) - a_c_g / 3;
 
-                        if (x_2 > 0) x.push_back(x_2);
+                        if (x_1 > 0) x.push_back(x_1);
+                    } else {
+                        x_1 = -std::pow(c_c_g - std::pow(a_c_g, 3) / 27, 1./3) - a_c_g/3;
+                        if(x_1 > 0) x.push_back(x_1);
                     }
                 }
 
                 if (x.size() > 0)
                     t_2 = *std::max_element(x.begin(), x.end());
 
+                // std::cout << t_1 << " ; " << t_2 << std::endl;
 
-                std::cout << t_1 << " ; " << t_2 << std::endl;
                 // for (size_t i = 0; i < 3 ; ++i)
                 //     std::cout << c_g(i, 0) << std::endl;
                 // for (size_t i = 0; i < 3 ; ++i)
                 //     std::cout << c_l(i, 0) << std::endl;
-
-                // std::cout << Q_l << " ; " << R_l << " ; "  << S_l << " >> " << psi_l << " " << t_1 << std::endl;
-                // std::cout << Q_g << " ; " << R_g << " ; "  << S_g << " >> " << psi_g << " " << t_2 << std::endl;
 
                 matrix<double> f_l = {3, 1}, f_g = {3, 1};
                 for (size_t i = 0; i < 3; ++i) {
@@ -288,17 +292,15 @@ int main() {
                     K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
                 }
 
-                std::cout << c_l << std::endl << c_g << std::endl << z << std::endl << std::endl;;
+                std::cout << c_l << std::endl << c_g << std::endl << t_1 << " | " << t_2 << std::endl << std::endl;;
                 bool flag = true;
                 for (size_t i = 0; i < 3; ++i) {
                     flag &= (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
                     if (!flag) break;
                 }
 
-                if (flag || (iteration == 20)) break;
+                if (flag || (iteration == 40)) break;
                 ++iteration;
-
-                // if (iteration == 3) break;
             }
             std::cout << "liq : " << c_l << std::endl;
             std::cout << "gaze : " << c_g << std::endl << std::endl;

@@ -7,7 +7,7 @@
 
 using namespace boost::numeric::ublas;
 
-#define EPSILON 1e-3
+#define EPSILON 1e-2
 #define EPS 0
 
 int main() {
@@ -94,7 +94,7 @@ int main() {
     //==============================================================================================================================================
     // Основная функция
     //==============================================================================================================================================
-    std::vector<double> phi = {1.};
+    std::vector<double> phi = {.15}; // 1.
     // size_t count = 100;
     // for (size_t i = 0 ; i < count; ++i) phi.push_back(double(i)/count);
 
@@ -149,7 +149,7 @@ int main() {
 
                 double xx1 = (-b_koef - std::sqrt(D)) / (2 * a_koef), xx2 = (-b_koef + std::sqrt(D)) / (2 * a_koef);
 
-                // std::cout << "Корни по альфа: " <<  (-b_koef - std::sqrt(D)) / (2 * a_koef) << " " << (-b_koef + std::sqrt(D)) / (2 * a_koef) << std::endl;
+                std::cout << "Корни по альфа: " <<  (-b_koef - std::sqrt(D)) / (2 * a_koef) << " " << (-b_koef + std::sqrt(D)) / (2 * a_koef) << std::endl;
 
                 // Дихотомия
                 double l_bound = 0, r_bound = 1, value , stop = 0;
@@ -219,7 +219,7 @@ int main() {
                     if (x_2 > 0) x.push_back(x_2);
                     if (x_3 > 0) x.push_back(x_3);
 
-                    std::cout << "first roots: " << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
+                    // std::cout << "first roots: " << x_1 << " ; " << x_2 << " ; " << x_3 << std::endl;
                 } else if (S_l < -EPS) {
                     if (Q_l > EPS) {
                         psi_l = 1./3 * std::acosh(std::abs(R_l) / std::sqrt(std::abs(std::pow(Q_l, 3))));
@@ -292,14 +292,18 @@ int main() {
                     K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
                 }
 
-                std::cout << c_l << std::endl << c_g << std::endl << t_1 << " | " << t_2 << std::endl << std::endl;;
+                std::cout << c_l << std::endl << c_g << std::endl << t_1 << " | " << t_2 << std::endl ;
                 bool flag = true;
                 for (size_t i = 0; i < 3; ++i) {
                     flag &= (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
                     if (!flag) break;
                 }
+                for (size_t i = 0; i < 3; ++i) {
+                    std::cout << f_l(i, 0) / f_g(i, 0) << " ; " ;
+                }
+                std::cout << std::endl << "Iter = " << iteration << std::endl<< std::endl;;
 
-                if (flag || (iteration == 40)) break;
+                if (flag || (iteration == 1000)) break;
                 ++iteration;
             }
             std::cout << "liq : " << c_l << std::endl;

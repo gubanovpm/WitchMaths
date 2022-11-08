@@ -41,18 +41,19 @@ int main() {
     // Пользовательские данные (вторая размерность =2 так как по заданию для двух пар (T, P))
     //========================================================================================
     matrix<double> T = {1, 1}; // К
-    T(0, 0) = 250/*, T(1, 0) = 200, T(2, 0) = 200*/;
+    T(0, 0) = 423/*, T(1, 0) = 250, T(2, 0) = 200*/;
     
 
     matrix<double> P = {3, 1}; // Па
-    P(0, 0) = 2000000, P(1, 0) = 2000000, P(2, 0) = 2000000;
+    P(0, 0) = 5000000, P(1, 0) = 2000000, P(2, 0) = 2000000;
     //==============================================================================================================================================
     // Вспомогательные лямбда-функции
     //==============================================================================================================================================
-    auto get_K_i  = [](double omega_i, double T_ri, double P_ri) { return std::exp(5.372697*(3.6 + omega_i) * (1 - 1./T_ri)) / P_ri; };
+    auto get_K_i  = [](double omega_i, double T_ri, double P_ri) { return std::exp(5.372697*(1. + omega_i) * (1 - 1./T_ri)) / P_ri; }; //3.6
     auto get_Tr_i = [](double T_i, double T_ci) { return T_i / T_ci; };
     auto get_Pr_i = [](double P_i, double P_ci) { return P_i / P_ci; };
     auto get_m_i  = [](double omega_i) { return 0.37964 + 1.408503 * omega_i - 0.16442*std::pow(omega_i, 2) + 0.016666 * std::pow(omega_i, 3); };
+    // auto get_m_i  = [](double omega_i) { return 0.37464 + 1.54226*omega_i - 0.02699 * std::pow(omega_i, 2); };
     auto get_OmegaA_i = [](double OmegaA0, double m_i, double T_rj) { return OmegaA0*std::pow(1+m_i*(1-std::sqrt(T_rj)), 2) ; };
     auto get_a_i  = [](double OmegaAi, double p_rj, double T_rj) { return OmegaAi * p_rj / std::pow(T_rj, 2) ; };
     auto get_b_i  = [](double OmegaBi, double p_rj, double T_rj) { return OmegaBi * p_rj / T_rj ; };
@@ -80,7 +81,8 @@ int main() {
         return sum;
     };
     auto get_f_i = [](const double _p, const double _T, const double _c_i, const double _Z, const double _a, const double _b, const double _s_i, const double _a_i, const double _b_i) {
-        return std::log(_p * _c_i) - std::log(_Z - _b) + _a / (2 * std::sqrt(2) * _b) * (2*_s_i/_a - _b_i/_b) * std::log((_Z - (std::sqrt(2) - 1) * _b) / (_Z + (std::sqrt(2) + 1) * _b)) + _b_i/_b * (_Z - 1);
+        double result =  std::log(_p * _c_i) - std::log(_Z - _b) + _a / (2 * std::sqrt(2) * _b) * (2*_s_i/_a - _b_i/_b) * std::log((_Z - (std::sqrt(2) - 1) * _b) / (_Z + (std::sqrt(2) + 1) * _b)) + _b_i/_b * (_Z - 1);
+        return std::exp(result);
     };
 
     auto function_alpha = [] (const matrix<double> &K, const matrix<double> &z, const double alpha) { 
@@ -94,9 +96,9 @@ int main() {
     //==============================================================================================================================================
     // Основная функция
     //==============================================================================================================================================
-    std::vector<double> phi = {.15}; // 1.
-    // size_t count = 100;
-    // for (size_t i = 0 ; i < count; ++i) phi.push_back(double(i)/count);
+    std::vector<double> phi = {}; // 1.
+    size_t count = 100;
+    for (size_t i = 0 ; i < count; ++i) phi.push_back(double(i)/count);
 
     std::vector<double> x = {};
     std::vector<size_t> y = {};
@@ -139,6 +141,7 @@ int main() {
             }
 
             while (true) {
+                std::cout << "K = " << K << std::endl;
                 // рассчитаем коэффициент квадратоного уравнения (в данном случае это будут решения квадратного уравнения)
                 double a_koef = (z(0, 0) + z(1, 0) + z(2, 0)) * (K(0, 0)-1) * (K(1, 0)-1) * (K(2, 0)-1) ;
                 double b_koef = z(0, 0) * (K(0, 0) - 1) * (K(1, 0) + K(2, 0) - 2) +
@@ -292,7 +295,9 @@ int main() {
                     K(i, 0) *= (f_l(i, 0) / f_g(i, 0));
                 }
 
-                std::cout << c_l << std::endl << c_g << std::endl << t_1 << " | " << t_2 << std::endl ;
+                std::cout << "c_l: " << c_l << std::endl ;
+                std::cout << "c_g: " << c_g << std::endl;
+                std::cout << t_1 << " | " << t_2 << std::endl ;
                 bool flag = true;
                 for (size_t i = 0; i < 3; ++i) {
                     flag &= (std::abs(f_l(i, 0) / f_g(i, 0) - 1) < EPSILON);
@@ -313,10 +318,10 @@ int main() {
         }
     }
 
-    // matplot::plot(x, y)->line_width(1).color("red");
-    // matplot::xlabel("Параметр Фи");
-    // matplot::ylabel("Количество итераций");
-    // matplot::show();
+    matplot::plot(x, y)->line_width(1).color("red");
+    matplot::xlabel("Параметр Фи");
+    matplot::ylabel("Количество итераций");
+    matplot::show();
     
     return 0;
 }

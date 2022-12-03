@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/first_task.exe.dir/srcs/main.cc.o CMakeFiles/first_task.exe.dir/srcs/newton.cc.o -o first_task.exe  -lmatplot 

@@ -1,0 +1,3 @@
+/home/shodan/WitchMaths/2_lab/first_task/build/CMakeFiles/first_task.exe.dir
+/home/shodan/WitchMaths/2_lab/first_task/build/CMakeFiles/edit_cache.dir
+/home/shodan/WitchMaths/2_lab/first_task/build/CMakeFiles/rebuild_cache.dir

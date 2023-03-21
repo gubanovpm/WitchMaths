@@ -56,27 +56,19 @@ std::vector<Vec> explicitRK(
     ) noexcept {
         std::vector<Vec> result;
         result.push_back(initial.state);
+
         for (unsigned i = 1; i <= iterations; ++i) {
             std::vector<Vec> K = {};
             for (unsigned s_i = 0; s_i < S; ++s_i) {
-                double t_n = initial.t + step * s_i;
-                Vec y_n = Vec::Zero(initial.state.size());
-                // std::cout << "Initial state size = " << initial.state.size() << std::endl;
+                double x_n = initial.t + step * table.column[s_i];
+                Vec y_n = result[i-1];
                 for (unsigned s_j = 0; s_j < s_i; ++s_j) {
-                    Vec tmp = (step * table.matrix[s_i][s_j] * K[s_j]); 
-                    // std::cout << "Current temp = " << tmp << std::endl;
-                    // std::cout << table.matrix[s_i][s_j] << " " ;
-                    for (unsigned j = 0; j < initial.state.size(); ++j) {
-                        y_n += tmp;
-                    }
+                    y_n += (step * table.matrix[s_i][s_j] * K[s_j]); 
                 }
-                // std::cout << "Current state y_n is : " << y_n.transpose() << std::endl;
-                K.push_back(rightPart(t_n, y_n));
+                K.push_back(rightPart(x_n, y_n));
             }
-            // for (unsigned j = 0; j < K.size(); ++j)
-            //     std::cout << j << ":" << std::endl << K[i] << std::endl;
-            Vec temp(initial.state.size());
-            temp = result[i-1];
+            
+            Vec temp = result[i-1];
             for (unsigned s_i = 0; s_i < S; ++s_i) {
                 temp += step * table.string[s_i] * K[s_i];
             }

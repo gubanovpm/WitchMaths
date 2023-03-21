@@ -26,12 +26,32 @@ int main() {
     };
     double step = 0.01;
     State state(Vec(2), 0); state.state << 2, -2.2;
-    unsigned iterations = 100;
+    unsigned iterations = 800;
 
     std::vector<Vec> runge_kutta = explicitRK(state, step, iterations, rightPart, table);
     for (unsigned i = 0; i < runge_kutta.size(); ++i) {
-        std::cout << runge_kutta[i] << std::endl;
+        // std::cout << runge_kutta[i] << std::endl << std::endl;
     }
+
+    sciplot::Plot2D plot;
+    plot.size(1920, 1080);
+    plot.legend()
+        .atOutsideBottom()
+        .displayHorizontal()
+        .displayExpandWidthBy(2);
+    plot.grid();
+
+
+    sciplot::Vec x = sciplot::linspace(0, 1, iterations);
+    sciplot::Vec y = sciplot::linspace(0, 0, iterations);
+    for (unsigned i = 0; i < runge_kutta.size(); ++i) {
+        y[i] = runge_kutta[i](0);
+    }
+    plot.drawCurve(x, y).label("").lineWidth(2);
+    sciplot::Figure figure = {{plot}};
+    sciplot::Canvas canvas = {{ figure }};
+
+    canvas.save("runge_kutta.png");
 
     return 0;
 }

@@ -60,7 +60,7 @@ std::vector<Vec> explicitRK(
         for (unsigned i = 1; i <= iterations; ++i) {
             std::vector<Vec> K = {};
             for (unsigned s_i = 0; s_i < S; ++s_i) {
-                double x_n = initial.t + step * table.column[s_i];
+                double x_n = initial.t + step * table.column[s_i] + step * (i - 1);
                 Vec y_n = result[i-1];
                 for (unsigned s_j = 0; s_j < s_i; ++s_j) {
                     y_n += (step * table.matrix[s_i][s_j] * K[s_j]); 

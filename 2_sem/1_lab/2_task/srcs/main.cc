@@ -25,25 +25,15 @@ int main() {
         std::array<double, 4> {    0, 1./2,    0,    0}, 
         std::array<double, 4> {    0,    0,    1,    0}
     };
+
     double step = 0.1;
     State state(Vec(2), 0); state.state << 0.8, 2;
     unsigned iterations = 80;
 
     std::vector<Vec> runge_kutta = explicitRK(state, step, iterations, rightPart, table);
-    // for (unsigned i = 0; i < runge_kutta.size(); ++i) {
-    //      std::cout << runge_kutta[i] << std::endl << std::endl;
-    // }
 
-    sciplot::Plot2D plot_1;
-    sciplot::Plot2D plot_2;
-    plot_1.legend()
-        .atOutsideBottom()
-        .displayHorizontal()
-        .displayExpandWidthBy(2);
-    plot_2.legend()
-        .atOutsideBottom()
-        .displayHorizontal()
-        .displayExpandWidthBy(2);
+    sciplot::Plot2D plot;
+    plot.legend().atOutsideBottom().displayHorizontal().displayExpandWidthBy(2);
 
     sciplot::Vec x   = sciplot::linspace(0, step*iterations, iterations);
     sciplot::Vec y_1 = sciplot::linspace(0, 0, iterations);
@@ -54,9 +44,10 @@ int main() {
     for (unsigned i = 0; i < runge_kutta.size(); ++i) {
         y_2[i] = runge_kutta[i](1);
     }
-    plot_1.drawCurve(x, y_1).label("z(x)").lineWidth(2);
-    plot_2.drawCurve(x, y_2).label("dz/dx(x)").lineWidth(2);
-    sciplot::Figure figure = {{plot_1, plot_2}};
+    plot.drawCurve(x, y_1).label("z(x)").lineWidth(2);
+    plot.drawCurve(x, y_2).label("dz/dx(x)").lineWidth(2);
+    plot.grid().lineWidth(2).show();
+    sciplot::Figure figure = {{ plot }};
     sciplot::Canvas canvas = {{ figure }};
     canvas.size(720, 400);
     canvas.save("runge_kutta.png");

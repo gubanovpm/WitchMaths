@@ -1,16 +1,16 @@
 #include "../libs/diff_eq.hh"
 
 // Объявление констант
-const double mu    = 1./82.45;
-const double gamma = 1 - mu;
-const double f     = 0;
+double mu    = 1./82.45;
+double GAMMA = 1 - mu;
+double f     = 0;
 
 // Объвление вспомогательных функций
 double r_1(const double x, const double y) {
     return std::sqrt(std::pow(x+mu, 2) + std::pow(y, 2));
 }
 double r_2(const double x, const double y) {
-    return std::sqrt(std::pow(x-gamma, 2) + std::pow(y, 2));
+    return std::sqrt(std::pow(x-GAMMA, 2) + std::pow(y, 2));
 }
 
 /** Функция правой части дифференциального уравнения y' = f(t, y)
@@ -21,7 +21,15 @@ double r_2(const double x, const double y) {
 Vec rightPart(const Time& t, const Vec& s) noexcept {
     Vec result(s.size());
 // Значение функций опредеяем здесь:
-    
+    double x = s(0), y = s(1), vx = s(2), vy = s(3);
+    // dx
+    result(0) = (-2*vy + x - GAMMA * x/std::pow(r_1(x, y), 3) - mu * x/std::pow(r_2(x, y), 3) ) / (1+f) ; ;
+    // dy
+    result(1) = (-2*vx + y - GAMMA * y/std::pow(r_1(x, y), 3) - mu * y/std::pow(r_2(x, y), 3) ) / (1+f) ;
+    // dvx
+    result(2) = 2*vy+x-GAMMA*(x+mu)/std::pow(r_1(x, y), 3) - mu * (x - mu)/std::pow(r_2(x, y), 3) - f * vx ;
+    // dvy
+    result(3) = 2*vx+y-GAMMA*(y+mu)/std::pow(r_1(x, y), 3) - mu * (y - mu)/std::pow(r_2(x, y), 3) - f * vy  ;
     return result;
 }
 
@@ -57,7 +65,7 @@ int main() {
     // Проинициализируем начальные значения
     State state;
     double x_0  = 1.2, y_0 = -1.05, dx_0 = 0;
-    double dy_0 = (-2*dx_0 + y_0 - gamma * y_0/std::pow(r_1(x_0, y_0), 3) - mu * y_0/std::pow(r_2(x_0, y_0), 3) ) / (1+f);
+    double dy_0 = (-2*dx_0 + y_0 - GAMMA * y_0/std::pow(r_1(x_0, y_0), 3) - mu * y_0/std::pow(r_2(x_0, y_0), 3) ) / (1+f);
     state.state = Vec(4); state.state << x_0, y_0, dx_0,  dy_0;
     state.t     = beg_t;
 

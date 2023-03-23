@@ -1,48 +1,96 @@
-#include <iostream>
-#include <cmath>
-#include <exception>
-#include <functional>
+#include "../libs/diff_eq.hh"
 
-#define L 4.
-#define m 2.
+double g(const double t) {
+    return 9.81 + 0.01 * std::cos(2 * M_PI * t);
+    return 9.81;
+}
 
-#define eps 1e-4
-#define CMP(__arg__) ((std::abs(__arg__) < eps))
-//========================================================================
-using ftype = std::function<double>(const double);
-//========================================================================
-class point_t {
-public:
-	double x;
-	double y;
+double gt(const double t) {
+    return -0.01 * std::sin(2*M_PI*t) * 2 * M_PI ;
+    return 0;
+}
 
-	point_t(const double x, const double y): x(x), y(y) {}
+double L = 4;
+double m = 2;
+/** Функция правой части дифференциального уравнения y' = f(t, y)
+ * @param time время t
+ * @param state состояние y
+ * @return правая часть f(t, y)
+ */ 
+Vec rightPart(const Time& t, const Vec& s) noexcept {
+    Vec result(s.size());
+// Значение функций опредеяем здесь:
+    double x = s(0), y = s(1), vx = s(2), vy = s(3), T = s(4);
 
-	void dump(std::ostream &out) const {
-		out << "(" << x << ", " << y << ")" ; 
-	}
-};
+    result(0) = vx;
+    result(1) = vy;
+    result(2) = -x/m/L*T;        // vx_t
+    result(3) = -y/m/L*T + g(t); // vy_t
+    result(4) = 2* m/L * (vx * result(2) + vy*result(3)) + m*gt(t)*y/L + m*g(t)*vy/L;
 
-std::ostream &operator<<(std::ostream &out, point_t &p);
+    return result;
+}
 
-double get_ocoord(const point_t &p);
-//========================================================================
 int main() {
-	point_t p1(1, 0);
-	std::cout << p1 << std::endl;
-	std::cout << get_ocoord(p1) << std::endl;
-	return 0;
-}
-//========================================================================
+    // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
+    ButcherTable<4> table;
+    table.column = {   0, 1./2, 1./2,    1};
+    table.string = {1./6, 1./3, 1./3, 1./6};
+    std::cout << std::endl;
+    table.matrix = std::array<std::array<double, 4>, 4>  {
+        std::array<double, 4> {    0,    0,    0,    0}, 
+        std::array<double, 4> { 1./2,    0,    0,    0}, 
+        std::array<double, 4> {    0, 1./2,    0,    0}, 
+        std::array<double, 4> {    0,    0,    1,    0}
+    };
 
-std::ostream &operator<<(std::ostream &out, point_t &p) { 
-	p.dump(out);
-	return out;
-}
+    // Таблица Бутчера для неявного метода Рунге-Кутты 3 порядка
+    // ButcherTable<3> table;
+    // table.column = {      0.32,  0.962963,  0.962963};
+    // table.string = {  0.720046,  0.720046,  0.008391};
+    // std::cout << std::endl;
+    // table.matrix = std::array<std::array<double, 3>, 3>  {
+    //     std::array<double, 3> {  0.333333,         0, -0.013333}, 
+    //     std::array<double, 3> {  0.625153,  0.333333,  0.004477}, 
+    //     std::array<double, 3> {  9.516331, -8.886702,  0.333333} 
+    // };
 
-double get_ocoord(const point_t &p) {
-	if (CMP(p.x)) { return L*L - p.y * p.y; }
-	if (CMP(p.y)) { return L*L - p.x * p.x; }
-	throw std::invalid_argument("Wrong coordinates\n");
+    // Проинициализируем значение шага и количество иттераций
+    unsigned iterations = 1000;
+    double beg_t = 0, end_t = 4;
+    double step = (end_t - beg_t)/iterations;
+
+    // Проинициализируем начальные значения
+    double vx = 4;
+    State state;
+    state.state = Vec(5); state.state << 0, L, vx, 0, m/L*(vx*vx) + m*g(0) ;
+    state.t     = beg_t;
+
+    // Вызов метода численного решения
+    std::vector<Vec> runge_kutta = implicitRK(state, step, iterations, rightPart, table);
+
+    // Построение графиков полученных решений
+    sciplot::Plot2D plot;
+    plot.xlabel("x");
+    plot.ylabel("y");
+    plot.legend().atOutsideBottom().displayHorizontal().displayExpandWidthBy(2);
+
+    sciplot::Vec t = sciplot::linspace(beg_t, end_t, iterations);
+    sciplot::Vec x = sciplot::linspace(0, 0, iterations);
+    sciplot::Vec y = sciplot::linspace(0, 0, iterations);
+    for (unsigned i = 0; i < runge_kutta.size(); ++i) {
+        x[i] = runge_kutta[i](0);
+        y[i] = -runge_kutta[i](1);
+        // std::cout << x[i] << " ; " << y[i] << std::endl;
+    }
+    plot.drawCurve(x, y).label("z(x)").lineWidth(2);
+    plot.grid().lineWidth(2).show();
+    sciplot::Figure figure = {{ plot }};
+    sciplot::Canvas canvas = {{ figure }};
+
+    canvas.size(1000, 700);
+    canvas.save("runge_kutta.png");
+    canvas.show();
+
+    return 0;
 }
-//========================================================================

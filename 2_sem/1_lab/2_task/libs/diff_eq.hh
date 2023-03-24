@@ -99,7 +99,7 @@ std::vector<Vec> implicitRK(
 
                 // Метод простой иттерации для коэффициентов Рунге-Кутты
                 // Количество иттераций для простого метода иттераций
-                unsigned count_of_it = 5;
+                unsigned count_of_it = 15;
                 for (unsigned i_it = 1; i_it <= count_of_it; ++i_it) {
                     for (unsigned s_i_it = 0; s_i_it < s; ++s_i_it) {
                         double t_n = initial.t + step * table.column[s_i_it] + step * (i_it - 1);

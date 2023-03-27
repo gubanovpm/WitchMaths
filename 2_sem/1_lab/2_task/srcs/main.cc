@@ -35,6 +35,10 @@ Vec rightPart(const Time& t, const Vec& s) noexcept {
 }
 
 int main() {
+    const std::array<double, 1> coefs_1 = { 1 };
+    const std::array<double, 2> coefs_1 = { 3./2, -1./2 };
+    const std::array<double, 3> coefs_1 = { 23./12, -4./3, 5./12 };
+    const std::array<double, 4> coefs_1 = { 55./24, -59./24, 37./24, -3./8 };
     // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
     ButcherTable<4> table;
     table.column = {   0, 1./2, 1./2,    1};
@@ -71,7 +75,7 @@ int main() {
     state.t     = beg_t;
 
     // Вызов метода численного решения
-    std::vector<Vec> runge_kutta = implicitRK(state, step, iterations, rightPart, table);
+    std::vector<Vec> runge_kutta = RungeKutta(state, step, iterations, rightPart, table);
 
     // Построение графиков полученных решений
     sciplot::Plot2D plot;

@@ -99,7 +99,7 @@ std::vector<Vec> implicitRK(
 
                 // Метод простой иттерации для коэффициентов Рунге-Кутты
                 // Количество иттераций для простого метода иттераций
-                unsigned count_of_it = 15;
+                unsigned count_of_it = 20;
                 for (unsigned i_it = 1; i_it <= count_of_it; ++i_it) {
                     for (unsigned s_i_it = 0; s_i_it < s; ++s_i_it) {
                         double t_n = initial.t + step * table.column[s_i_it] + step * (i_it - 1);
@@ -164,7 +164,9 @@ std::vector<Vec> RungeKutta(
     const std::function<Vec(Time, Vec)>& rightPart,
     const ButcherTable<s>& table
     ) noexcept {
-        if (isImplicit(table)) return implicitRK(initial, step, iterations, rightPart, table);
+        if (isImplicit(table)) { 
+            return implicitRK(initial, step, iterations, rightPart, table);
+        }
         return explicitRK(initial, step, iterations, rightPart, table);
     }
 
@@ -188,7 +190,18 @@ std::vector<Vec> explicitAdams(
     const std::array<double, s>& coefs,
     const std::array<Vec, s>& previousRightParts
     ) noexcept {
-
+        std::vector<Vec> result;
+        for (unsigned i = 0; i < s; ++i)
+            result.push_back(coefs[i]);
+        for (unsigned i = s; i <= iterations; ++i) {
+            Vec temp = result[i - 1];
+            for (unsigned j = 1; j <= s; ++j) {
+                double x_n = initial.t + step * table.column[s_i] + step * (i - j - 1);
+                temp += step * coefs[j] * rightPart(x_n, result[i - j - 1]);
+            }
+            result.push_back(temp);
+        }
+        return result;
     }
 
 /** Функция неявного метода Адамса
@@ -216,42 +229,63 @@ std::vector<Vec> explicitAdams(
 
 /** Функция неявного метода Адамса
  * @tparam s порядок метода
- * @param a  Левая граница отрезка
- * @param b  Правая граница отрезка
- * @param y0 y(a)
- * @param y1 y(b)
- * @param h Шаг интегрирования
- * @param eps Точность
- * @param table Таблица Бутчера для вызова метода Рунге-Кутты
+ * @param segment границы отрезка
+ * @param state значения функции на концах отрезка
+ * @param tangens начальные значения угла наклона
+ * @param rightPart функция правой части
+ * @param table таблица Бутчера для вызова метода Рунге-Кутты
+ * @param h шаг интегрирования
+ * @param eps точность
  * 
  * @return массив решений
  */
-// template <unsigned s>
-// std::vector<Vec> shooting_method(
-//     const double a, 
-//     const double b, 
-//     const double y0, 
-//     const double y1, 
-//     const double h, 
-//     const double eps,
-//     const ButcherTable<s>& table
-//     ) noexcept {
-//         double nu1 = 1.0, nu2 = 0.8, nu3; // некоторое значение тангенса угла наклона касательной к решению в точке x = a
-//         int N = (int)((b - a) / h + 1); // количество элементов
-//         double[,] Y1 = new double[2, N], Y2 = new double[2, N]; // массивы для хранения решений
-//         Y1 = rk4(a, b, h, y0, nu1, Y1); // решаем систему для nu1
-//         Y2 = rk4(a, b, h, y0, nu2, Y2); // решаем систему для nu2
-//         while (Math.Abs(Y2[0, N - 1] - y1) > eps) //
-//         {
-//             nu3 = nu2 - ((nu2 - nu1) / (Y2[0, N - 1] - Y1[0, N - 1])) * (Y2[0, N - 1] - y1); // вычисляем новое nu
-//             nu1 = nu2;
-//             nu2 = nu3;
-//             Y1 = Y2;
-//             Y2 = new double[2, N]; // без этого не работает ?!? о_О
-//             Y2 = rk4(a, b, h, y0, nu2, Y2); //вычисляем решение для нового nu
-//         }
-//         return Y2;
-//     }
+template <unsigned s>
+std::vector<Vec> shooting_method(
+    const Vec &segment,
+    const Vec &state,
+    const Vec &tangens,
+    const std::function<Vec(Time, Vec)>& rightPart,
+    const ButcherTable<s>& table,
+    const double h,
+    const double eps
+    ) noexcept {
+        if (segment.size() != 2 || state.size() != 2 || tangens.size() != 2) {
+            std::cout << "Wrong begin state size" << std::endl;
+            return {};
+        }
+
+        int iterations = ((segment(1) - segment(0)) / h);
+        double tg = tangens(1);
+
+        State st_1; st_1.state = Vec(2); 
+        st_1.state << state(0), tangens(0);
+        st_1.t     = segment(0);
+        
+        State st_2; st_2.state = Vec(2); 
+        st_2.state << state(0), tangens(1);
+        st_2.t     = segment(0);
+        
+        State st_3; st_3.state = Vec(2); st_2.t = segment(0);
+
+        std::vector<Vec> runge_kutta_1 = RungeKutta(st_1, h, iterations, rightPart, table);
+        std::vector<Vec> runge_kutta_2 = RungeKutta(st_2, h, iterations, rightPart, table);
+        
+        unsigned it_count = 0;
+        while (std::abs(runge_kutta_2[iterations](0) - state(1)) > eps) {
+            tg = st_2.state(1) - (st_2.state(1) - st_1.state(1)) / (runge_kutta_2[iterations](0) - runge_kutta_1[iterations](0)) * (runge_kutta_2[iterations ](0) - state(1));
+            st_3.state << state(0), tg ;
+            st_1.state << state(0), st_2.state(1) ;
+            st_2.state << state(0), tg ;
+            runge_kutta_1 = runge_kutta_2;
+
+            runge_kutta_2 = RungeKutta(st_2, h, iterations, rightPart, table);
+            if (it_count == 1000) break;
+            ++it_count;
+        }
+        std::cout << "Угловой коэффициент для начальной точки: " << tg << std::endl;
+        std::cout << "Номер иттерации: " << it_count << std::endl;
+        return runge_kutta_2;
+    }
  
 
 #endif

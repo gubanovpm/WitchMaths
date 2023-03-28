@@ -1,4 +1,5 @@
 #include "../libs/diff_eq.hh"
+#include "../libs/tables.hh"
 
 double g(const double t) {
     return 9.81 + 0.01 * std::cos(2 * M_PI * t);
@@ -17,7 +18,7 @@ double m = 2;
  * @param state состояние y
  * @return правая часть f(t, y)
  */ 
-Vec rightPart(const Time& t, const Vec& s) noexcept {
+Vec rightPart(const Time& t, const Vec& s) {
     Vec result(s.size());
 // Значение функций опредеяем здесь:
     double x = s(0), y = s(1), vx = s(2), vy = s(3), T = s(4);
@@ -32,16 +33,10 @@ Vec rightPart(const Time& t, const Vec& s) noexcept {
 }
 
 int main() {
-
-    const std::array<double, 1> coefs_1 = { 1 };
-    const std::array<double, 2> coefs_1 = { 3./2, -1./2 };
-    const std::array<double, 3> coefs_1 = { 23./12, -4./3, 5./12 };
-    const std::array<double, 4> coefs_1 = { 55./24, -59./24, 37./24, -3./8 };
     // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
     ButcherTable<4> table;
-    table.column = {   0, 1./2, 1./2,    1};
-    table.string = {1./6, 1./3, 1./3, 1./6};
-    std::cout << std::endl;
+    table.column = std::array<double, 4> {   0, 1./2, 1./2,    1};
+    table.string = std::array<double, 4> {1./6, 1./3, 1./3, 1./6};
     table.matrix = std::array<std::array<double, 4>, 4>  {
         std::array<double, 4> {    0,    0,    0,    0}, 
         std::array<double, 4> { 1./2,    0,    0,    0}, 
@@ -72,7 +67,9 @@ int main() {
     state.t     = beg_t;
 
     // Вызов метода численного решения
-    std::vector<Vec> runge_kutta = RungeKutta(state, step, iterations, rightPart, table);
+    const long unsigned stage = iterations; // стадийность для метода Адамса
+    std::vector<Vec> runge_kutta = RungeKutta(state, step, stage, rightPart, table);
+    std::vector<Vec> addams = explicitAdams(state, step, iterations, rightPart, coefs_3, runge_kutta);
 
     // Построение графиков полученных решений
     sciplot::Plot2D plot;
@@ -86,7 +83,6 @@ int main() {
     for (unsigned i = 0; i < runge_kutta.size(); ++i) {
         x[i] = runge_kutta[i](0);
         y[i] = -runge_kutta[i](1);
-        // std::cout << x[i] << " ; " << y[i] << std::endl;
     }
     plot.drawCurve(x, y).label("z(x)").lineWidth(2);
     plot.grid().lineWidth(2).show();
@@ -94,7 +90,7 @@ int main() {
     sciplot::Canvas canvas = {{ figure }};
 
     canvas.size(1000, 700);
-    canvas.save("runge_kutta.png");
+    canvas.save("first_task.png");
     canvas.show();
 
     return 0;

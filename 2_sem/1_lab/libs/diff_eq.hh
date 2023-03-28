@@ -7,7 +7,6 @@
 #include <functional>
 #include <eigen3/Eigen/Core>
 
-
 #include <sciplot/sciplot.hpp>
 #include <iostream>
 
@@ -26,6 +25,18 @@ struct ButcherTable {
     std::array<double, s> column;
     std::array<double, s> string;
     std::array<std::array<double, s>, s> matrix;
+
+    // template <unsigned stage>
+    // ButcherTable(
+    //     std::array<double, stage> col,
+    //     std::array<double, stage> str,
+    //     std::array<std::array<double, stage>, stage> mat
+    //     ) : 
+    //         column(col),
+    //         string(str),
+    //         matrix(mat) {
+    //         }
+    // ButcherTable() {}
 };
 
 /** Функция явного метода Рунге-Кутты
@@ -181,53 +192,29 @@ std::vector<Vec> RungeKutta(
  *
  * @return массив решений
  */
-template <unsigned s>
 std::vector<Vec> explicitAdams(
     const State& initial,
     double step,
     unsigned iterations,
     const std::function<Vec(Time, Vec)>& rightPart,
-    const std::array<double, s>& coefs,
-    const std::array<Vec, s>& previousRightParts
+    const std::vector<double>& coefs,
+    const std::vector<Vec>& previousRightParts
     ) noexcept {
         std::vector<Vec> result;
-        for (unsigned i = 0; i < s; ++i)
-            result.push_back(coefs[i]);
-        for (unsigned i = s; i <= iterations; ++i) {
+        for (unsigned i = 0; i < coefs.size(); ++i)
+            result.push_back(previousRightParts[i]);
+        for (unsigned i = coefs.size(); i <= iterations; ++i) {
             Vec temp = result[i - 1];
-            for (unsigned j = 1; j <= s; ++j) {
-                double x_n = initial.t + step * table.column[s_i] + step * (i - j - 1);
-                temp += step * coefs[j] * rightPart(x_n, result[i - j - 1]);
+            for (unsigned j = 1; j <= coefs.size(); ++j) {
+                double x_n = initial.t + step * (i - j - 1);
+                temp += step * coefs[j] * rightPart(x_n, result[i - j]);
             }
             result.push_back(temp);
         }
         return result;
     }
 
-/** Функция неявного метода Адамса
- * @tparam s порядок метода
- * @param initial начальное условие (после разгона)
- * @param step  шаг интегрирования
- * @param iterations количество шагов, которые необходимо сделать
- * @param rightPart функция правой части дифференциального уравнения
- * @param coefs коэффициенты при правых частях
- * @param previousRightParts - правые части дифференциального уравнения до начального условия (разгон метода)
- *
- * @return массив решений
- */
-// template <unsigned s>
-// std::vector<Vec> implicitAdams(
-//     const State& initial,
-//     double step,
-//     unsigned iterations,
-//     const std::function<Vec(Time, Vec)>& rightPart,
-//     const std::array<double, s + 1>& coefs,
-//     const std::array<Vec, s>& rightParts
-//     ) noexcept {
-
-//     }
-
-/** Функция неявного метода Адамса
+/** Функция метода стрельбы
  * @tparam s порядок метода
  * @param segment границы отрезка
  * @param state значения функции на концах отрезка

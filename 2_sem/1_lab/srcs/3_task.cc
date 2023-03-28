@@ -78,7 +78,7 @@ int main() {
     sciplot::Canvas canvas = {{ figure }};
 
     canvas.size(1000, 800);
-    canvas.save("runge_kutta.png");
+    canvas.save("third_task.png");
     canvas.show();
 
     return 0;

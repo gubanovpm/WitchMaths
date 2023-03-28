@@ -4,7 +4,7 @@
 // double m = 0.01215088;
 double m = 0.012277471;
 double M = 1 - m;
-double f = 0;
+double f = 1;
 
 // Объвление вспомогательных функций
 double r_1(const double x, const double y) {
@@ -35,10 +35,15 @@ Vec rightPart(const Time& t, const Vec& s) noexcept {
 }
 
 int main() {
-    const std::array<double, 1> coefs_1 = { 1 };
-    const std::array<double, 2> coefs_1 = { 3./2, -1./2 };
-    const std::array<double, 3> coefs_1 = { 23./12, -4./3, 5./12 };
-    const std::array<double, 4> coefs_1 = { 55./24, -59./24, 37./24, -3./8 };
+    // Таблица Бутчера для явного метода Рунге-Кутты 2 порядка
+    // ButcherTable<2> table;
+    // table.column = std::array<double, 2> { 0, 1./2};
+    // table.string = std::array<double, 2> { 0, 1.};
+    // table.matrix = std::array<std::array<double, 2>, 2>  {
+    //     std::array<double, 2> {    0,    0}, 
+    //     std::array<double, 2> { 1./2,    0}, 
+    // };
+
     // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
     ButcherTable<4> table;
     table.column = {   0, 1./2, 1./2,    1};
@@ -63,14 +68,14 @@ int main() {
     // };
 
     // Проинициализируем значение шага и количество иттераций
-    unsigned iterations = 30000;
+    unsigned iterations = 300000;
     double beg_t = 0, end_t = 16;
     double step = (end_t - beg_t)/iterations;
 
     // Проинициализируем начальные значения
     State state;
-    // double x_0  = 1.2, y_0 = -1.05, dx_0 = 0, dy_0 = -2;
-    double x_0 = .994, y_0 = 0, dx_0 = 0, dy_0 = -2.031732629557337;
+    double x_0  = 1.2, y_0 = 0, dx_0 = 0, dy_0 =  -1.05;
+    // double x_0 = .994, y_0 = 0, dx_0 = 0, dy_0 = -2.031732629557337;
     state.state = Vec(4); state.state << x_0, y_0, dx_0, dy_0;
     state.t     = beg_t;
 

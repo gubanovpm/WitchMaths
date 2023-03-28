@@ -24,6 +24,15 @@ Vec rightPart(const Time& t, const Vec& s) noexcept {
 //=======================================================================
 
 int main() {
+    // Таблица Бутчера для явного метода Рунге-Кутты 2 порядка
+    // ButcherTable<2> table;
+    // table.column = std::array<double, 2> { 0, 1./2};
+    // table.string = std::array<double, 2> { 0, 1.};
+    // table.matrix = std::array<std::array<double, 2>, 2>  {
+    //     std::array<double, 2> {    0,    0}, 
+    //     std::array<double, 2> { 1./2,    0}, 
+    // };
+
     // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
     ButcherTable<4> table;
     table.column = {   0, 1./2, 1./2,    1};

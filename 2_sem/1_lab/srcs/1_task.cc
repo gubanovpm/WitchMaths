@@ -33,6 +33,15 @@ Vec rightPart(const Time& t, const Vec& s) {
 }
 
 int main() {
+    // Таблица Бутчера для явного метода Рунге-Кутты 2 порядка
+    // ButcherTable<2> table;
+    // table.column = std::array<double, 2> { 0, 1./2};
+    // table.string = std::array<double, 2> { 0, 1.};
+    // table.matrix = std::array<std::array<double, 2>, 2>  {
+    //     std::array<double, 2> {    0,    0}, 
+    //     std::array<double, 2> { 1./2,    0}, 
+    // };
+
     // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
     ButcherTable<4> table;
     table.column = std::array<double, 4> {   0, 1./2, 1./2,    1};
@@ -71,6 +80,9 @@ int main() {
     std::vector<Vec> runge_kutta = RungeKutta(state, step, stage, rightPart, table);
     std::vector<Vec> addams = explicitAdams(state, step, iterations, rightPart, coefs_3, runge_kutta);
 
+    std::vector<Vec> runge_kutta_1 = RungeKutta(state, step, iterations, rightPart, table);
+
+
     // Построение графиков полученных решений
     sciplot::Plot2D plot;
     plot.xlabel("x");
@@ -80,17 +92,23 @@ int main() {
     sciplot::Vec t = sciplot::linspace(beg_t, end_t, iterations);
     sciplot::Vec x = sciplot::linspace(0, 0, iterations);
     sciplot::Vec y = sciplot::linspace(0, 0, iterations);
+    sciplot::Vec x_1 = sciplot::linspace(0, 0, iterations);
+    sciplot::Vec y_1 = sciplot::linspace(0, 0, iterations);
     for (unsigned i = 0; i < runge_kutta.size(); ++i) {
-        x[i] = runge_kutta[i](0);
-        y[i] = -runge_kutta[i](1);
+        x[i] = addams[i](0);
+        y[i] = -addams[i](1);
+
+        x_1[i] = runge_kutta_1[i](0);
+        y_1[i] = -runge_kutta_1[i](1);
     }
     plot.drawCurve(x, y).label("z(x)").lineWidth(2);
+    plot.drawCurve(x_1, y_1).label("z(x)").lineWidth(2);
     plot.grid().lineWidth(2).show();
     sciplot::Figure figure = {{ plot }};
     sciplot::Canvas canvas = {{ figure }};
 
     canvas.size(1000, 700);
-    canvas.save("first_task.png");
+    canvas.save("adams.png");
     canvas.show();
 
     return 0;

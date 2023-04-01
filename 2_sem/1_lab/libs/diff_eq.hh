@@ -26,11 +26,10 @@ struct ButcherTable {
     std::array<double, s> string;
     std::array<std::array<double, s>, s> matrix;
 
-    template <unsigned stage>
-    ButcherTable(
-        std::array<double, stage> col,
-        std::array<double, stage> str,
-        std::array<std::array<double, stage>, stage> mat
+    ButcherTable<s>(
+        std::array<double, s> col,
+        std::array<double, s> str,
+        std::array<std::array<double, s>, s> mat
         ) : 
             column(col),
             string(str),

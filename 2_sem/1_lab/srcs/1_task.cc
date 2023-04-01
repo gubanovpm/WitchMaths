@@ -33,37 +33,6 @@ Vec rightPart(const Time& t, const Vec& s) {
 }
 
 int main() {
-    // Таблица Бутчера для явного метода Рунге-Кутты 2 порядка
-    // ButcherTable<2> table;
-    // table.column = std::array<double, 2> { 0, 1./2};
-    // table.string = std::array<double, 2> { 0, 1.};
-    // table.matrix = std::array<std::array<double, 2>, 2>  {
-    //     std::array<double, 2> {    0,    0}, 
-    //     std::array<double, 2> { 1./2,    0}, 
-    // };
-
-    // Таблица Бутчера для явного метода Рунге-Кутты 4 порядка
-    ButcherTable<4> table;
-    table.column = std::array<double, 4> {   0, 1./2, 1./2,    1};
-    table.string = std::array<double, 4> {1./6, 1./3, 1./3, 1./6};
-    table.matrix = std::array<std::array<double, 4>, 4>  {
-        std::array<double, 4> {    0,    0,    0,    0}, 
-        std::array<double, 4> { 1./2,    0,    0,    0}, 
-        std::array<double, 4> {    0, 1./2,    0,    0}, 
-        std::array<double, 4> {    0,    0,    1,    0}
-    };
-
-    // Таблица Бутчера для неявного метода Рунге-Кутты 3 порядка
-    // ButcherTable<3> table;
-    // table.column = {      0.32,  0.962963,  0.962963};
-    // table.string = {  0.720046,  0.720046,  0.008391};
-    // std::cout << std::endl;
-    // table.matrix = std::array<std::array<double, 3>, 3>  {
-    //     std::array<double, 3> {  0.333333,         0, -0.013333}, 
-    //     std::array<double, 3> {  0.625153,  0.333333,  0.004477}, 
-    //     std::array<double, 3> {  9.516331, -8.886702,  0.333333} 
-    // };
-
     // Проинициализируем значение шага и количество иттераций
     unsigned iterations = 1000;
     double beg_t = 0, end_t = 4;
@@ -77,10 +46,10 @@ int main() {
 
     // Вызов метода численного решения
     const long unsigned stage = iterations; // стадийность для метода Адамса
-    std::vector<Vec> runge_kutta = RungeKutta(state, step, stage, rightPart, table);
+    std::vector<Vec> runge_kutta = RungeKutta(state, step, stage, rightPart, ex_table_4);
     std::vector<Vec> addams = explicitAdams(state, step, iterations, rightPart, coefs_3, runge_kutta);
 
-    std::vector<Vec> runge_kutta_1 = RungeKutta(state, step, iterations, rightPart, table);
+    std::vector<Vec> runge_kutta_1 = RungeKutta(state, step, iterations, rightPart, ex_table_4);
 
 
     // Построение графиков полученных решений

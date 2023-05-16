@@ -9,7 +9,7 @@ int main(int argc, const char *argv[]) {
 	matrix_t *matrix;
 	get_args(argc, argv, &matrix, border_func);	
 	matrix->compute();
-	matrix->save_img("");
+	matrix->save_img("../imgs/lux_scheme/test", "lux.gif");
 	delete matrix;
 	return 0;
 }

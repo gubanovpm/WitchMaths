@@ -29,9 +29,11 @@ void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, 
 
 void matrix_t::compute() {	
 	double h = x;
-	for (size_t j = 0; j < m; ++j) {	
+	for (size_t j = 0; j < m; ++j) {
 		data[j] = u(j*h);
+		// std::cout << data[j] << " " ;
 	}
+	std::cout << std::endl;
 	switch (type) {
 		case 0: { //Lux scheme
 			if (!is_div) { 
@@ -84,10 +86,14 @@ void matrix_t::compute() {
 		case 3: {
 			if (!is_div) {
 				std::cout << "Left corner nodiv" << std::endl;
-				for (size_t i = 1; i < n; ++i)
+				for (size_t i = 1; i < n; ++i) {
 					for (size_t j = 0; j < m; ++j) {
 						data[i*m + j] = left_corner_scheme_nodiv(i-1, j, data[(i-1)*m + j]);
+						// std::cout << data[i*m + j] << " " ;
 					}
+					// std::cout << std::endl;
+				}
+
 			} else {
 				std::cout << "Left corner div" << std::endl;
 				for (size_t i = 1; i < n; ++i)
@@ -152,13 +158,13 @@ double matrix_t::left_corner_scheme_nodiv(const size_t i, const size_t j, const 
 	double h = x;
 	double k1 = c*t/h;
 	double next = ((j +1 == m) ? data[i*m+j] : data[i*m+j+1] );
-	return data[i*m+j]*(1+c*k1)-k1*next;
+	return data[i*m+j]*(1.+c*k1)-k1*next;
 }
 double matrix_t::left_corner_scheme_div(const size_t i, const size_t j, const double c) const{
 	double h = x;
 	double k1 = c*t/h;
 	double next = ((j +1 == m) ? data[i*m+j] : data[i*m+j+1] );
-	return data[i*m+j]*(1+c*k1*data[i*m+j]/2)-k1*next*next/2;
+	return data[i*m+j]*(1.+c*k1*data[i*m+j]/2)-k1*next*next/2;
 }
 
 void matrix_t::save_img(const std::string path, const std::string gif_name) {

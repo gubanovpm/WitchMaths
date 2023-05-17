@@ -1,0 +1,3 @@
+/mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/build/CMakeFiles/second_task.dir
+/mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/build/CMakeFiles/rebuild_cache.dir

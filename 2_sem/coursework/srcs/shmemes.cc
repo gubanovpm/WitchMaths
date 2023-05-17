@@ -5,11 +5,11 @@ using namespace WitchMath;
 //===============================================================================================
 void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix) noexcept {
 	if (argc != 5) {
-		std::cout << "Usage is: " << argv[0] << " <T> <Rmax> <k> <m>" << std::endl;
-		std::cout << "<T> -- max X value (min X = 0)" << std::endl;
-		std::cout << "<X> -- max T value (min T = 0)" << std::endl;
-		std::cout << "<k> -- count of steps on X coord" << std::endl;
-		std::cout << "<m> -- count of steps on T coord" << std::endl;
+		std::cout << "Usage is: " << argv[0] << " <Tmax> <Rmax> <k> <m>" << std::endl;
+		std::cout << "<Tmax> -- max Tmax value (Tmin = 0 by default)" << std::endl;
+		std::cout << "<Rmax> -- max Rmax value (Rmin = 0 by default)" << std::endl;
+		std::cout << "<k>    -- count of steps on X coord" << std::endl;
+		std::cout << "<m>    -- count of steps on T coord" << std::endl;
 		exit(-1);
 	}
 	*matrix = new matrix_t {

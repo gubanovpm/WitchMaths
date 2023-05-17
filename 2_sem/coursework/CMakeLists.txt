@@ -21,4 +21,8 @@ target_link_libraries(${EXEC_FILE} PRIVATE
 
 set (COMPILER_SETTINGS -O3)
 
+if (DEBUG)
+    target_compile_definitions(${EXEC_FILE} PRIVATE DEBUG)
+endif()
+
 target_compile_options(${EXEC_FILE} PRIVATE ${COMPILER_SETTINGS})

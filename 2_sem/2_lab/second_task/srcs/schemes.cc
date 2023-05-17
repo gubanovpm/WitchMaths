@@ -3,7 +3,7 @@
 using namespace WitchMath;
 
 void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, const utype u, const utype g) noexcept {
-	if (argc != 8) {
+	if (argc != 7) {
 		std::cout << "Usage is: " << argv[0] << " <T> <X> <k> <m> <alpha> <beta>" << std::endl;
 		std::cout << "<T> -- max X value (min X = 0)" << std::endl;
 		std::cout << "<X> -- max T value (min T = 0)" << std::endl;
@@ -11,7 +11,6 @@ void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, 
 		std::cout << "<m> -- count of steps on T coord" << std::endl;
         std::cout << "<alpha> -- alpha coefficient" << std::endl;
         std::cout << "<beta> -- beta coefficient" << std::endl;
-        std::cout << "<type> -- scheme type" << std::endl;
 		exit(-1);
 	}
 	*matrix = new matrix_t {
@@ -22,8 +21,7 @@ void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, 
 		u,
 		g,
         std::atof(argv[5]),
-        std::atof(argv[6]), 
-        std::atoi(argv[7])
+        std::atof(argv[6])
     };
 }
 

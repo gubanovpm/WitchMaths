@@ -24,7 +24,6 @@ private:
     utype g;
     double a = 0.;
     double b = 0.;
-    size_t type;
 
 public:
 	matrix_t(
@@ -35,8 +34,7 @@ public:
         const utype u,
         const utype g,
         const double a, 
-        const double b, 
-        const int type) :
+        const double b) :
 		    n(n), 
             m(m), 
             T(T), 
@@ -47,8 +45,7 @@ public:
             u(u), 
             g(g),
             a(a), 
-            b(b),
-            type(type) {
+            b(b) {
                 for (auto &line: data) line.resize(m); 
             }
 

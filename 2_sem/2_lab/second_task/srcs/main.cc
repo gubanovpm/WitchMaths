@@ -1,12 +1,13 @@
 #include "../libs/schemes.hh"
 using namespace WitchMath;
 
+#define XMX 20
+
 double border_func(const double x) {
-    //return 19 * std::exp(-10 * std::pow((x - 50), 2)) + 1;
-	return ((x >= 0.25 && x <= 0.75) ? 0.5 : 0);
+	return ((x >= 0.25 * XMX && x <= 0.75 * XMX) ? 0.5 : 0);
 }
 double g(const double t) {
-	return 0;
+	return t;
 }
 
 int main(int argc, const char *argv[]) {

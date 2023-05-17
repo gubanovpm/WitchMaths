@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/second_task.dir/srcs/main.cc.o CMakeFiles/second_task.dir/srcs/schemes.cc.o -o second_task  /usr/local/lib/libmatplot.a /usr/local/lib/Matplot++/libnodesoup.a 

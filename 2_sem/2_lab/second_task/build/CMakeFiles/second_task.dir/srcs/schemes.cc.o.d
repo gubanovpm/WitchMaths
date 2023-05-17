@@ -1,7 +1,7 @@
 CMakeFiles/second_task.dir/srcs/schemes.cc.o: \
  /mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/srcs/schemes.cc \
  /usr/include/stdc-predef.h \
- /mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/libs/schemes.hh \
+ /mnt/c/Users/751/Desktop/WitchMaths/2_sem/2_lab/second_task/srcs/../libs/schemes.hh \
  /usr/include/c++/11/iostream \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \

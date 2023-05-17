@@ -2,7 +2,7 @@
 
 using namespace WitchMath;
 
-void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, const utype u) noexcept {
+void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, const utype u, const utype g) noexcept {
 	if (argc != 8) {
 		std::cout << "Usage is: " << argv[0] << " <T> <X> <k> <m> <alpha> <beta>" << std::endl;
 		std::cout << "<T> -- max X value (min X = 0)" << std::endl;
@@ -20,6 +20,7 @@ void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, 
 		std::atoi(argv[3]), 
 		std::atoi(argv[4]),
 		u,
+		g,
         std::atof(argv[5]),
         std::atof(argv[6]), 
         std::atoi(argv[7])
@@ -28,43 +29,43 @@ void WitchMath::get_args(const int argc, const char *argv[], matrix_t **matrix, 
 
 void matrix_t::compute() {	
 	double h = x;
-	for (size_t j = 0; j < m; ++j) { data[j] = u(j*h); }
+	for (size_t j = 0; j < m; ++j) { data[0][j] = u(j*h); }
+	for (size_t i = 0; i < n; ++i) { data[i][0] = g(i*t); }
 
-
+	for (size_t i = 1; i < n; ++i) {
+		for (size_t j = 1; j < m; ++j) {
+			data[i][j] = scheme_1(i - 1, j, 1);
+		}
+	}
 }
 
 double matrix_t::scheme_1(const size_t i, const size_t j, const double c) {
-    size_t indn = ((j   == 0) ? j : j - 1);
-    size_t indx = ((j+1 == m) ? m : j + 1);
-    double coef = c*t/2/x/x;
-    return coef*(data[(i+1)*m + indx]-2*data[])
+	// std::cout << i << " ; " << j << std::endl;
+    size_t jmn = ((j   == 0) ? j : j - 1);
+    size_t jmx = ((j+1 == m) ? m : j + 1);
+	size_t imn = ((i   == 0) ? i : i - 1);
+    double amin = amn(i, jmn);
+	double amax = amn(i, j);
+    return (
+		data[i+1][j] * (std::pow(x, 2) + amax + amin) +
+		data[imn][jmn] * amin -
+		data[i][j] * std::pow(x, 2) / t - 
+		std::pow(x, 2) * Q(i*t)
+	) / amn(i, j);
     ;
 }
 
-void matrix_t::save_img(const std::string path, const std::string gif_name) {
-	// std::system("rm ../imgs/lux_scheme/*.png");
-	// for (size_t i = 0; i < n; ++i) {
-	// 	auto f = matplot::figure(true);
-	// 	auto J = matplot::linspace(0, X, m);
-	// 	std::vector<double> U;
-	// 	for (size_t j = 0; j < m; ++j) U.push_back(data[i*m + j]);
-	// 	matplot::plot(J, U, "--xr");
-	// 	matplot::xlabel("x");
-	// 	matplot::ylabel("U in " +  std::to_string(t*i));
-	// 	matplot::save(path + "_" + std::to_string(t*i)+".png");
-	// }
-	// std::system("convert -delay 1 -loop 0 ../imgs/temp/*.png lux.gif");
-	// std::system("rm ../imgs/lux_scheme/*.png");
+void matrix_t::save_img() noexcept{
 	auto f = matplot::figure(true);
 	auto [R, Y] = matplot::meshgrid(matplot::linspace(0, T, n), matplot::linspace(0, X, m));
 	auto [I, J] = matplot::meshgrid(matplot::linspace(0, n-1, n), matplot::linspace(0, m-1, m));
 	auto Z = matplot::transform(I, J, [this](size_t i, size_t j) {  
-		return data[i*m + j];
+		return data[i][j];
 	});
 
 	matplot::surf(Y, R, Z);
-	matplot::xlabel("X");
-	matplot::ylabel("T");
+	matplot::xlabel("x");
+	matplot::ylabel("t");
 	//matplot::save(path);
 	matplot::show();
 }

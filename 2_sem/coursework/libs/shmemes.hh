@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <matplot/matplot.h>
+#include <utility>
 
 const double R0  = 100;
 const double T0  = 0.3;
@@ -50,12 +51,12 @@ public:
             P(n),
             ro(n) {
                 for (size_t i = 0; i < n; ++i) { 
-                    u [i].resize(m),
-                    E [i].resize(m),
-                    P [i].resize(m),
-                    ro[i].resize(m);
+                    u [i].resize(m+1),
+                    E [i].resize(m+1),
+                    P [i].resize(m+1),
+                    ro[i].resize(m+1);
                 }
-                for (size_t j = 0; j < m; ++j) {
+                for (size_t j = 0; j <= m; ++j) {
                     u [0][j] = u0,
                     E [0][j] = ((j*h <= R0) ? E0  : 0),
                     P [0][j] = ((j*h <= R0) ? P0  : 0),
@@ -78,6 +79,7 @@ public:
 };
 
 void get_args(const int argc, const char *argv[], matrix_t **matrix) noexcept;
+void check_curant(const double c, const double tau, const double h) noexcept;
 };
 
 #endif

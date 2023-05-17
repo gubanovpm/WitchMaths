@@ -94,7 +94,7 @@ void matrix_t::compute() {
         scheme_u (i, 0, 1/ro[i][0]);
         scheme_EP(i, 0, P[i][0]/(std::pow(h, 2)*ro[i][0]));
 
-        for (size_t j = 1; j < m; ++j) {
+        for (size_t j = 1; j <= m; ++j) {
             scheme_ro(i, j, 1/(std::pow(j*h, 2)));
             if (ro[i][j] == 0) { break; }
 
@@ -102,6 +102,11 @@ void matrix_t::compute() {
             scheme_EP(i, j, P[i][j]/(std::pow(j*h, 2)*ro[i][j]));
         }
     }
+}
+//===============================================================================================
+//===============================================================================================
+void WitchMath::check_curant(const double c, const double tau, const double h) noexcept {
+    if (std::abs(c) * tau / h > 1) std::cout << "Hello from Curant" << std::endl; 
 }
 //===============================================================================================
 //===============================================================================================
@@ -127,11 +132,11 @@ void matrix_t::view_plot(const size_t plot_num) noexcept {
 	auto f = matplot::figure(true);
 	auto [R, Y] = matplot::meshgrid(
                     matplot::linspace(0, T, n), 
-                    matplot::linspace(0, X, m)
+                    matplot::linspace(0, X, m+1)
                 );
 	auto [I, J] = matplot::meshgrid(
                     matplot::linspace(0, n-1, n), 
-                    matplot::linspace(0, m-1, m)
+                    matplot::linspace(0, m, m+1)
                 );
 	auto Z = matplot::transform(I, J, [data](size_t i, size_t j) {  
 		return (*data)[i][j];
@@ -139,8 +144,9 @@ void matrix_t::view_plot(const size_t plot_num) noexcept {
 
 #ifdef DEBUG
     matplot::surf(Y, R, Z);
+    matplot::colorbar();
 #else
-    matplot::contourf(Y, R, Z);
+    matplot::contourf(Y, R, Z, "--");
 #endif
 
 	matplot::xlabel("r");
